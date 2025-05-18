@@ -1,47 +1,90 @@
-import React, { useState } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, ScrollView, TextInput, Image } from 'react-native';
-import { LinearGradient } from 'expo-linear-gradient';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
+import React, { useEffect, useState } from 'react';
+import { Image, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
+
+// Define the Team type
+interface Team {
+    id: string;
+    name: string;
+    coach: string;
+    logo: string | number; // Allow both URL string and require() for local images
+}
 
 // Dummy data for local teams - Replace with your actual data source
-const localTeamsData = [
-    { id: 'indoor-men-saints', name: 'Saints', coach: 'Johan Weyhe', logo: 'https://via.placeholder.com/50' }, // Replace with actual logo URLs
-    { id: 'indoor-men-wanderers', name: 'Wanderers', coach: 'Melissa Gillies', logo: 'https://via.placeholder.com/50' },
-    { id: 'indoor-women-saints', name: 'Saints Womens Team', coach: 'Johan Weyhe', logo: 'https://via.placeholder.com/50' },
-    { id: 'indoor-women-wanderers', name: 'Wanderers Womens National Team', coach: 'Melissa Gillies', logo: 'https://via.placeholder.com/50' },
+const localTeamsData: Team[] = [
+    { id: 'wanderers', name: 'Wanderers', coach: 'Johan Weyhe', logo: require('../../assets/images/find_a_club/wanderers.png') }, // Local image
+    { id: 'coastal-raiders', name: 'Coastal Raiders', coach: 'Melissa Gillies', logo: require( '../../assets/images/find_a_club/Coastal-Raidersr.png') }, // URL string
+    { id: 'saints', name: 'Saints', coach: 'Erick DaCosta', logo: require('../../assets/images/find_a_club/Saints-Big.png') }, // Local
+    { id: 'team-x', name: 'Team-X', coach: 'Kauna Musi', logo: require( '../../assets/images/find_a_club/Team-X.jpg') }, // URL
+    { id: 'dts', name: 'DTS', coach: 'John Doe', logo: require('../../assets/images/find_a_club/DTS-01r.png') }, // Local
+    { id: 'old-boys', name: 'Old Boys', coach: 'Jane Smith', logo: require( '../../assets/images/find_a_club/Old-Boys.jpg') }, // URL
+
 ];
 
-const LocalTeamsScreen = () => {
+const TeamsScreen = () => {
     const navigation = useNavigation();
     const [searchQuery, setSearchQuery] = useState('');
-    const [teams, setTeams] = useState(localTeamsData); // State to hold the teams data
+    const [teams, setTeams] = useState<Team[]>([]);
+    const [loading, setLoading] = useState(true); // Add loading state
+    const [error, setError] = useState<string | null>(null);
+
+    useEffect(() => {
+        // Simulate data loading (e.g., from an API or database)
+        const fetchData = async () => {
+            try {
+                // In a real app, you'd fetch data here
+                // For this example, we'll just use the dummy data after a short delay
+                setTimeout(() => {
+                    setTeams(localTeamsData);
+                    setLoading(false);
+                }, 500); // Short delay, remove in production
+            } catch (err: any) {
+                setError(err.message || 'Failed to load teams data.');
+                setLoading(false);
+            }
+        };
+
+        fetchData();
+    }, []);
 
     const handleSearch = (query: string) => {
         setSearchQuery(query);
-        // In a real app, you would filter the teams based on the search query
-        const filteredTeams = localTeamsData.filter(team =>
-            team.name.toLowerCase().includes(query.toLowerCase())
+    };
+
+    const filteredTeams = teams.filter(team =>
+        team.name.toLowerCase().includes(searchQuery.toLowerCase())
+    );
+
+     const goToEditClub = (teamId: string) => {
+        navigation.navigate('EditClub', { teamId });
+    };
+
+    if (loading) {
+        return (
+            <View style={styles.loadingContainer}>
+                <Text>Loading Teams...</Text>
+            </View>
         );
-        setTeams(filteredTeams);
-    };
+    }
 
-    const goToRegisterClub = () => {
-        navigation.navigate('RegisterClub'); //  Make sure this route is defined
-    };
-
-    const goToEditClub = (teamId: string) => {
-        navigation.navigate('EditClub', { teamId }); //  Make sure this route is defined and pass team ID
-    };
+    if (error) {
+        return (
+            <View style={styles.errorContainer}>
+                <Text style={styles.errorText}>Error: {error}</Text>
+                <TouchableOpacity onPress={() => setError(null)}>
+                    <Text style={styles.retryText}>Retry</Text>
+                </TouchableOpacity>
+            </View>
+        );
+    }
 
     return (
         <ScrollView style={styles.container}>
             <View style={styles.header}>
                 <Text style={styles.headerTitle}>Local Teams</Text>
-                {/* Add a back button if this is a screen within a stack */}
             </View>
 
-            {/* Search Bar */}
             <View style={styles.searchContainer}>
                 <TextInput
                     style={styles.searchInput}
@@ -52,58 +95,32 @@ const LocalTeamsScreen = () => {
                 <MaterialCommunityIcons name="microphone-outline" size={24} color="#888" />
             </View>
 
-            {/* Team Lists */}
             <View>
-                {/* Indoor Men Premier */}
-                <Text style={styles.sectionTitle}>Indoor Men Premier</Text>
-                {teams
-                    .filter(team => team.name.toLowerCase().includes('indoor men')) // Filter teams
-                    .map(team => (
-                        <TouchableOpacity key={team.id} style={styles.teamCard} onPress={() => goToEditClub(team.id)}>
-                            <View style={styles.teamInfo}>
-                                <Image source={{ uri: team.logo }} style={styles.teamLogo} />
-                                <View>
-                                    <Text style={styles.teamName}>{team.name}</Text>
-                                    <Text style={styles.coach}>Current Coach: {team.coach}</Text>
-                                </View>
+                {filteredTeams.map(team => (
+                    <TouchableOpacity key={team.id} style={styles.teamCard}  onPress={() => goToEditClub(team.id)}>
+                        <View style={styles.teamInfo}>
+                            {/* Handle different logo types */}
+                            {typeof team.logo === 'string' ? (
+                                team.logo ? <Image source={{ uri: team.logo }} style={styles.teamLogo} /> :  <View style={styles.placeholderLogo} />
+                            ) : team.logo ? (
+                                <Image source={team.logo} style={styles.teamLogo} />
+                            ) :  <View style={styles.placeholderLogo} />
+                            }
+                            <View>
+                                <Text style={styles.teamName}>{team.name}</Text>
+                                <Text style={styles.coach}>Current Coach: {team.coach || 'N/A'}</Text>
                             </View>
-                        </TouchableOpacity>
-                    ))}
-
-                {/* Indoor Women Premier */}
-                <Text style={styles.sectionTitle}>Indoor Women Premier</Text>
-                {teams
-                    .filter(team => team.name.toLowerCase().includes('indoor women'))
-                    .map(team => (
-                        <TouchableOpacity key={team.id} style={styles.teamCard} onPress={() => goToEditClub(team.id)}>
-                            <View style={styles.teamInfo}>
-                                <Image source={{ uri: team.logo }} style={styles.teamLogo} />
-                                <View>
-                                    <Text style={styles.teamName}>{team.name}</Text>
-                                    <Text style={styles.coach}>Current Coach: {team.coach}</Text>
-                                </View>
-                            </View>
-                        </TouchableOpacity>
-                    ))}
+                        </View>
+                    </TouchableOpacity>
+                ))}
             </View>
 
-            {/* Buttons */}
             <View style={styles.buttonContainer}>
-                <TouchableOpacity style={styles.registerButton} onPress={goToRegisterClub}>
-                    <LinearGradient
-                        colors={['#4a148c', '#1a237e']} //  purple gradient
-                        style={styles.gradient}
-                    >
-                        <Text style={styles.buttonText}>Register a club</Text>
-                    </LinearGradient>
+                 <TouchableOpacity style={styles.registerButton} onPress={() => navigation.navigate('RegisterClub')}>
+                    <Text style={styles.buttonText}>Register a club</Text>
                 </TouchableOpacity>
-                <TouchableOpacity style={styles.editButton} onPress={() => {}}>
-                    <LinearGradient
-                        colors={['#007BFF', '#0040FF']} // Blue gradient
-                        style={styles.gradient}
-                    >
-                        <Text style={styles.buttonText}>Edit a club</Text>
-                    </LinearGradient>
+                <TouchableOpacity style={styles.editButton} onPress={() => { }}>
+                    <Text style={styles.buttonText}>Edit a club</Text>
                 </TouchableOpacity>
             </View>
         </ScrollView>
@@ -117,7 +134,7 @@ const styles = StyleSheet.create({
     },
     header: {
         padding: 16,
-        marginTop: 20, // Add space for status bar
+        marginTop: 20,
     },
     headerTitle: {
         fontSize: 24,
@@ -128,7 +145,7 @@ const styles = StyleSheet.create({
         flexDirection: 'row',
         alignItems: 'center',
         paddingHorizontal: 16,
-        backgroundColor: '#f0f0f0', // Light background for search bar
+        backgroundColor: '#f0f0f0',
         borderRadius: 8,
         marginHorizontal: 16,
         marginBottom: 20,
@@ -160,6 +177,15 @@ const styles = StyleSheet.create({
         borderRadius: 25,
         marginRight: 16,
     },
+    placeholderLogo: {
+        width: 50,
+        height: 50,
+        borderRadius: 25,
+        marginRight: 16,
+        backgroundColor: '#ddd', // Light gray placeholder
+        alignItems: 'center',
+        justifyContent: 'center',
+    },
     teamName: {
         fontSize: 18,
         fontWeight: 'bold',
@@ -187,12 +213,6 @@ const styles = StyleSheet.create({
         borderRadius: 8,
         overflow: 'hidden',
     },
-    gradient: {
-        padding: 12,
-        alignItems: 'center',
-        justifyContent: 'center',
-        borderRadius: 8,
-    },
     buttonText: {
         fontSize: 16,
         fontWeight: 'bold',
@@ -201,7 +221,29 @@ const styles = StyleSheet.create({
     teamInfo: {
         flexDirection: 'row',
         alignItems: 'center'
+    },
+    loadingContainer: {
+        flex: 1,
+        justifyContent: 'center',
+        alignItems: 'center'
+    },
+      errorContainer: {
+        flex: 1,
+        justifyContent: 'center',
+        alignItems: 'center',
+        padding: 16,
+    },
+    errorText: {
+        color: 'red',
+        fontSize: 18,
+        marginBottom: 10,
+        textAlign: 'center'
+    },
+    retryText: {
+        color: 'blue',
+        fontSize: 16,
+        textDecorationLine: 'underline',
     }
 });
 
-export default LocalTeamsScreen;
+export default TeamsScreen;

@@ -1,37 +1,36 @@
-import React from 'react';
-import { View, Text, StyleSheet, Image, TouchableOpacity } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
+import React from 'react';
+import { Image, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 
 const ProfileScreen = () => {
     const navigation = useNavigation();
 
-    // Dummy data for the user profile.  Replace with your actual data source.
+    // Dummy data for the user profile. Replace the avatar URL with a require statement.
     const profileData = {
         name: 'John Doe',
         email: 'john.doe@example.com',
         phone: '+1 498 788 9999',
-        avatar: 'https://via.placeholder.com/150', // Replace with a real image URL
+        avatar: require('../../assets/images/avatar.jpg'), //  local image
     };
 
     const handleEditProfile = () => {
-        // Navigate to the edit profile screen.  You'll need to create this screen.
         navigation.navigate('EditProfile');
     };
 
     return (
+
         <View style={styles.container}>
             <View style={styles.header}>
                 <TouchableOpacity onPress={() => navigation.goBack()}>
-                    {/* Use an icon here if you have one, or a simple Text */}
-                    <Text style={styles.backButtonText}>←</Text>
+                    <Text style={[styles.backButtonText, { fontSize: 30 }]}>←</Text>
                 </TouchableOpacity>
                 <Text style={styles.headerTitle}>Profile</Text>
-                {/* Leave this empty, or add a settings icon if needed */}
                 <View style={{ width: 24 }} />
             </View>
+            
 
             <View style={styles.profileContainer}>
-                <Image source={{ uri: profileData.avatar }} style={styles.avatar} />
+                <Image source={profileData.avatar} style={styles.avatar} />
                 <TouchableOpacity style={styles.editProfileButton} onPress={handleEditProfile}>
                     <Text style={styles.editProfileButtonText}>Edit Profile</Text>
                 </TouchableOpacity>
@@ -65,7 +64,7 @@ const styles = StyleSheet.create({
         justifyContent: 'space-between',
         alignItems: 'center',
         padding: 16,
-        marginTop: 20, // Add space for status bar on iOS
+        marginTop: 20,
     },
     headerTitle: {
         fontSize: 24,
@@ -73,7 +72,7 @@ const styles = StyleSheet.create({
         color: 'black',
     },
     backButtonText: {
-        fontSize: 24,
+        fontSize: 24, // Increased font size
         color: 'black',
     },
     profileContainer: {
@@ -87,7 +86,7 @@ const styles = StyleSheet.create({
         marginBottom: 20,
     },
     editProfileButton: {
-        backgroundColor: '#007BFF', //  blue
+        backgroundColor: '#007BFF',
         paddingHorizontal: 20,
         paddingVertical: 10,
         borderRadius: 8,

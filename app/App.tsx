@@ -1,23 +1,43 @@
-// In your App.tsx or another relevant file
 import React from 'react';
 import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
-import EventsScreen from '../app/(tabs)/events'; // Adjust the path if needed
-import CreateEventScreen from './(tabs)/events/createEvents'; // Import the new screen
-// ... other imports
+import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
+
+import EventsScreen from './(tabs)/events';
+import CreateEventScreen from '../app/events/createEvents';
+import LoginScreen from './(auth)/LoginScreen';
+import SignupScreen from './(auth)/SignupScreen';
+import SplashScreen from './(auth)/SplashScreen';
+import NewsScreen from './(tabs)/news';
+import ProfileScreen from './(tabs)/profile';
+import TeamsScreen from './(tabs)/teams'; // Fix casing if needed
 
 const Stack = createNativeStackNavigator();
+const Tab = createBottomTabNavigator();
 
-const App = () => {
-    return (
-        <NavigationContainer>
-            <Stack.Navigator>
-                <Stack.Screen name="Events" component={EventsScreen} />
-                <Stack.Screen name="CreateEvent" component={CreateEventScreen} />
-                {/* Add other screens here */}
-            </Stack.Navigator>
-        </NavigationContainer>
-    );
-};
+// Tab Navigator (Main app)
+function Tabs() {
+  return (
+    <Tab.Navigator screenOptions={{ headerShown: true }}>
+      <Tab.Screen name="News" component={NewsScreen} />
+      <Tab.Screen name="Events" component={EventsScreen} />
+      <Tab.Screen name="Teams" component={TeamsScreen} />
+      <Tab.Screen name="Profile" component={ProfileScreen} />
+    </Tab.Navigator>
+  );
+}
 
-export default App;
+// Main App Stack Navigator
+export default function App() {
+  return (
+    <NavigationContainer>
+      <Stack.Navigator screenOptions={{ headerShown: false }} initialRouteName="Splash">
+        <Stack.Screen name="Splash" component={SplashScreen} />
+        <Stack.Screen name="Login" component={LoginScreen} />
+        <Stack.Screen name="Signup" component={SignupScreen} />
+        <Stack.Screen name="Tabs" component={Tabs} />
+        <Stack.Screen name="CreateEvent" component={CreateEventScreen} />
+      </Stack.Navigator>
+    </NavigationContainer>
+  );
+}

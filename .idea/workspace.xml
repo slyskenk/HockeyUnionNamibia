@@ -1,0 +1,129 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="AutoImportSettings">
+    <option name="autoReloadType" value="SELECTIVE" />
+  </component>
+  <component name="ChangeListManager">
+    <list default="true" id="51c05af2-8610-4ce2-8c53-3b4dfc4f8139" name="Changes" comment="">
+      <change afterPath="$PROJECT_DIR$/.gitignore" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/.vscode/settings.json" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/app.json" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/app/(tabs)/_layout.tsx" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/app/(tabs)/events.tsx" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/app/(tabs)/events/createEvents.tsx" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/app/(tabs)/history.tsx" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/app/(tabs)/news.tsx" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/app/(tabs)/news/article.tsx" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/app/(tabs)/profile.tsx" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/app/(tabs)/profile/editProfile.tsx" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/app/(tabs)/teams.tsx" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/app/(tabs)/teams/editTeam.tsx" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/app/(tabs)/teams/registerTeam.tsx" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/app/App.tsx" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/assets/fonts/SpaceMono-Regular.ttf" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/assets/images/Flag_of_Namibia.svg.png" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/assets/images/events/20241218-Hockey-Nkosi-Cup-Final-1-Namibia-Celebrate-Win-1024x640.jpg" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/assets/images/favicon.png" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/assets/images/find_a_club/2021-09-06-16_10_13-Window.png" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/assets/images/find_a_club/Coastal-Raidersr.png" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/assets/images/find_a_club/DTS-01r.png" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/assets/images/find_a_club/NAMIBIA-MASTERS-HOCKEY-LOGO-01r-1536x1086.png" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/assets/images/find_a_club/Old-Boys-1024x1485.jpg" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/assets/images/find_a_club/Saints-Big.png" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/assets/images/find_a_club/School-of-Excellencer.png" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/assets/images/find_a_club/Sparta-1024x1448.jpg" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/assets/images/find_a_club/Team-X.jpg" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/assets/images/find_a_club/globe-with-meridians_1f310.png" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/assets/images/logo/cropped-NHU-Big-2.png" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/assets/images/news/MarcNel.jpg" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/assets/images/news/namibia_women.png" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/components/Collapsible.tsx" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/components/ExternalLink.tsx" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/components/HapticTab.tsx" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/components/HelloWave.tsx" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/components/ParallaxScrollView.tsx" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/components/TabBar.tsx" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/components/ThemedText.tsx" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/components/ThemedView.tsx" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/components/ui/IconSymbol.ios.tsx" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/components/ui/IconSymbol.tsx" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/components/ui/TabBarBackground.ios.tsx" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/components/ui/TabBarBackground.tsx" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/constants/Colors.ts" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/eslint.config.js" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/package-lock.json" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/package.json" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/scripts/reset-project.js" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/tsconfig.json" afterDir="false" />
+    </list>
+    <option name="SHOW_DIALOG" value="false" />
+    <option name="HIGHLIGHT_CONFLICTS" value="true" />
+    <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
+    <option name="LAST_RESOLUTION" value="IGNORE" />
+  </component>
+  <component name="Git.Settings">
+    <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
+  </component>
+  <component name="GitHubPullRequestSearchHistory">{
+  &quot;lastFilter&quot;: {
+    &quot;state&quot;: &quot;OPEN&quot;,
+    &quot;assignee&quot;: &quot;slyskenk&quot;
+  }
+}</component>
+  <component name="GithubPullRequestsUISettings">{
+  &quot;selectedUrlAndAccountId&quot;: {
+    &quot;url&quot;: &quot;https://github.com/slyskenk/HockeyUnionNamibia&quot;,
+    &quot;accountId&quot;: &quot;9362be4b-6e80-48eb-b8ef-caf860d0b629&quot;
+  }
+}</component>
+  <component name="ProjectColorInfo">{
+  &quot;associatedIndex&quot;: 0
+}</component>
+  <component name="ProjectId" id="2xGyeuRUWo5GkDTbjqxUO9tuzLQ" />
+  <component name="ProjectViewState">
+    <option name="hideEmptyMiddlePackages" value="true" />
+    <option name="showLibraryContents" value="true" />
+  </component>
+  <component name="PropertiesComponent"><![CDATA[{
+  "keyToString": {
+    "ASKED_MARK_IGNORED_FILES_AS_EXCLUDED": "true",
+    "ModuleVcsDetector.initialDetectionPerformed": "true",
+    "RunOnceActivity.ShowReadmeOnStart": "true",
+    "RunOnceActivity.git.unshallow": "true",
+    "git-widget-placeholder": "main",
+    "last_opened_file_path": "C:/Users/slysk/Desktop/NUST/MAP711S(Mobile App Dev)/HockeyUnion",
+    "node.js.detected.package.eslint": "true",
+    "node.js.detected.package.tslint": "true",
+    "node.js.selected.package.eslint": "(autodetect)",
+    "node.js.selected.package.tslint": "(autodetect)",
+    "nodejs_package_manager_path": "npm",
+    "vue.rearranger.settings.migration": "true"
+  }
+}]]></component>
+  <component name="RecentsManager">
+    <key name="CopyFile.RECENT_KEYS">
+      <recent name="C:\Users\slysk\Desktop\NUST\MAP711S(Mobile App Dev)\HockeyUnion" />
+    </key>
+  </component>
+  <component name="SharedIndexes">
+    <attachedChunks>
+      <set>
+        <option value="bundled-js-predefined-d6986cc7102b-6a121458b545-JavaScript-WS-251.25410.117" />
+      </set>
+    </attachedChunks>
+  </component>
+  <component name="TaskManager">
+    <task active="true" id="Default" summary="Default task">
+      <changelist id="51c05af2-8610-4ce2-8c53-3b4dfc4f8139" name="Changes" comment="" />
+      <created>1747578804012</created>
+      <option name="number" value="Default" />
+      <option name="presentableId" value="Default" />
+      <updated>1747578804012</updated>
+      <workItem from="1747578805514" duration="953000" />
+    </task>
+    <servers />
+  </component>
+  <component name="TypeScriptGeneratedFilesManager">
+    <option name="version" value="3" />
+  </component>
+</project>

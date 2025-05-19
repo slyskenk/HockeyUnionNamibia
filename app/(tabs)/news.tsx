@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import {
     View,
     Text,
@@ -10,42 +10,29 @@ import {
     Platform,
 } from 'react-native';
 import { MaterialIcons as Icon } from '@expo/vector-icons';
+import newsData from '../news/news'; // ✅ adjust path
 
-// Define your news item type
 type NewsItem = {
     id: string;
     title: string;
-};
-
-// Static news data — add more items as needed
-const NEWS: NewsItem[] = [
-    {
-        id: '1',
-        title: 'A Namibian Hockey Legend has departed',
-    },
-    {
-        id: '2',
-        title: 'Watch out world, Namibia and South Africa are on their way',
-    },
-];
-
-// Map each id to its image require() path
-const imageMap: Record<string, any> = {
-    '1': require('../../assets/images/news/MarcNel.jpg'),
-    '2': require('../../assets/images/news/namibia_women.png'),
+    imageUrl: any; // because it's a local require()
 };
 
 const Page = () => {
     const [query, setQuery] = useState('');
+    const [news, setNews] = useState<NewsItem[]>([]);
 
-    // Filter news by search query
-    const filteredNews = NEWS.filter(item =>
+    useEffect(() => {
+        setNews(newsData);
+    }, []);
+
+    const filteredNews = news.filter(item =>
         item.title.toLowerCase().includes(query.toLowerCase())
     );
 
     const renderItem = ({ item }: { item: NewsItem }) => (
         <View style={styles.card}>
-            <Image source={imageMap[item.id]} style={styles.cardImage} />
+            <Image source={item.imageUrl} style={styles.cardImage} />
             <View style={styles.cardContent}>
                 <Text style={styles.cardTitle}>{item.title}</Text>
                 <TouchableOpacity>
@@ -57,7 +44,6 @@ const Page = () => {
 
     return (
         <View style={styles.container}>
-            {/* Search bar */}
             <View style={styles.searchBar}>
                 <Icon name="search" size={24} />
                 <TextInput
@@ -71,7 +57,6 @@ const Page = () => {
                 </TouchableOpacity>
             </View>
 
-            {/* News list */}
             <FlatList
                 data={filteredNews}
                 keyExtractor={item => item.id}
@@ -112,7 +97,12 @@ const styles = StyleSheet.create({
         backgroundColor: '#fff',
         elevation: 2,
     },
-    cardImage: { width: '100%', height: 180 },
+    cardImage: {
+        width: '100%',
+        height: 180,
+        resizeMode: 'cover',
+        backgroundColor: '#eee',
+    },
     cardContent: {
         flexDirection: 'row',
         justifyContent: 'space-between',
@@ -126,6 +116,3 @@ const styles = StyleSheet.create({
         color: '#333',
     },
 });
-
-// Reminder: after adding new images, restart Metro with:
-//   expo start --clear

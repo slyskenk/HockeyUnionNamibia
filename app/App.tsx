@@ -2,7 +2,6 @@ import React from 'react';
 import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
-
 import EventsScreen from './(tabs)/events';
 import CreateEventScreen from '../app/events/createEvents';
 import LoginScreen from './(auth)/LoginScreen';
@@ -11,9 +10,15 @@ import SplashScreen from './(auth)/SplashScreen';
 import NewsScreen from './(tabs)/news';
 import ProfileScreen from './(tabs)/profile';
 import TeamsScreen from './(tabs)/teams'; // Fix casing if needed
+import RegisterTeamScreen from './teams/registerTeam';
+import EditTeamScreen from './teams/editTeam';
+
+
 
 const Stack = createNativeStackNavigator();
 const Tab = createBottomTabNavigator();
+
+
 
 // Tab Navigator (Main app)
 function Tabs() {
@@ -37,6 +42,8 @@ export default function App() {
         <Stack.Screen name="Signup" component={SignupScreen} />
         <Stack.Screen name="Tabs" component={Tabs} />
         <Stack.Screen name="CreateEvent" component={CreateEventScreen} />
+        <Stack.Screen name ="registerTeam" component={RegisterTeamScreen}/>
+        <Stack.Screen name ="editTeam" component={EditTeamScreen}/>
       </Stack.Navigator>
     </NavigationContainer>
   );

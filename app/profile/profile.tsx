@@ -55,7 +55,7 @@ const ProfileScreen = () => {
   }, []);
 
   return (
-    <ScrollView contentContainerStyle={styles.container}>
+    <ScrollView contentContainerStyle={styles.scrollContent}>
       {/* Header */}
       <View style={styles.header}>
         <TouchableOpacity onPress={() => navigation.goBack()}>
@@ -95,7 +95,7 @@ const ProfileScreen = () => {
         </TouchableOpacity>
       </View>
 
-      {/* Modern User Info Container */}
+      {/* User Info */}
       <View style={styles.infoContainer}>
         <View style={styles.infoRow}>
           <Text style={styles.label}>Full Name</Text>
@@ -112,14 +112,32 @@ const ProfileScreen = () => {
           <Text style={styles.info}>{profileData.phone}</Text>
         </View>
       </View>
+
+      {/* Surprise Footer */}
+      <View style={styles.footer}>
+        <Text style={styles.quote}>
+          "Coffee. Code. Sleep. Repeat."
+        </Text>
+        <TouchableOpacity
+          style={styles.logoutButton}
+          onPress={() => {
+            auth.signOut();
+            router.replace('/'); // Adjust route if needed
+          }}
+        >
+          <Text style={styles.logoutText}>Log Out</Text>
+        </TouchableOpacity>
+      </View>
     </ScrollView>
   );
 };
 
+export default ProfileScreen;
+
 const styles = StyleSheet.create({
-  container: {
-    paddingBottom: 40,
+  scrollContent: {
     backgroundColor: '#f2f4f8',
+    flexGrow: 1,
   },
   header: {
     flexDirection: 'row',
@@ -190,6 +208,36 @@ const styles = StyleSheet.create({
     backgroundColor: '#eee',
     marginVertical: 4,
   },
+  footer: {
+    marginTop: 30,
+    backgroundColor: '#fff',
+    marginHorizontal: 20,
+    borderRadius: 16,
+    padding: 20,
+    alignItems: 'center',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.08,
+    shadowRadius: 4,
+    elevation: 3,
+    marginBottom: 40,
+  },
+  quote: {
+    fontSize: 14,
+    fontStyle: 'italic',
+    color: '#555',
+    marginBottom: 16,
+    textAlign: 'center',
+  },
+  logoutButton: {
+    backgroundColor: '#FF3B30',
+    paddingHorizontal: 24,
+    paddingVertical: 12,
+    borderRadius: 10,
+  },
+  logoutText: {
+    color: '#fff',
+    fontSize: 16,
+    fontWeight: '600',
+  },
 });
-
-export default ProfileScreen;

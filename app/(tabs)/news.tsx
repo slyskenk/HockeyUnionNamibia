@@ -1,30 +1,51 @@
+// screens/Page.tsx (or wherever this lives)
 import React, { useEffect, useState } from 'react';
 import {
     View,
     Text,
     StyleSheet,
     FlatList,
-    TextInput,
     Image,
     TouchableOpacity,
-    Platform,
 } from 'react-native';
 import { MaterialIcons as Icon } from '@expo/vector-icons';
+import { getAuth } from 'firebase/auth';
+import { getFirestore, doc, getDoc } from 'firebase/firestore';
 import newsData from '../news/news'; // ✅ adjust path
+import SearchBar from '../../components/SearchBar'; // ✅ import your new component
 
 type NewsItem = {
     id: string;
     title: string;
-    imageUrl: any; // because it's a local require()
+    imageUrl: any;
 };
 
 const Page = () => {
     const [query, setQuery] = useState('');
     const [news, setNews] = useState<NewsItem[]>([]);
+    const [profilePic, setProfilePic] = useState<string | null>(null);
 
     useEffect(() => {
         setNews(newsData);
+        fetchProfilePic();
     }, []);
+
+    const fetchProfilePic = async () => {
+        const auth = getAuth();
+        const firestore = getFirestore();
+        const user = auth.currentUser;
+
+        if (user) {
+            const docRef = doc(firestore, 'users', user.uid);
+            const docSnap = await getDoc(docRef);
+            if (docSnap.exists()) {
+                const data = docSnap.data();
+                if (data.profilePicture) {
+                    setProfilePic(data.profilePicture);
+                }
+            }
+        }
+    };
 
     const filteredNews = news.filter(item =>
         item.title.toLowerCase().includes(query.toLowerCase())
@@ -44,24 +65,22 @@ const Page = () => {
 
     return (
         <View style={styles.container}>
-            <View style={styles.searchBar}>
-                <Icon name="search" size={24} />
-                <TextInput
-                    style={styles.searchInput}
-                    placeholder="Search"
-                    value={query}
-                    onChangeText={setQuery}
-                />
-                <TouchableOpacity>
-                    <Icon name="mic" size={24} />
-                </TouchableOpacity>
-            </View>
-
             <FlatList
                 data={filteredNews}
                 keyExtractor={item => item.id}
                 renderItem={renderItem}
+                ListHeaderComponent={
+                    <>
+                        <SearchBar
+                            query={query}
+                            onChangeText={setQuery}
+                            profilePic={profilePic}
+                        />
+                        <View style={{ height: 16 }} />
+                    </>
+                }
                 contentContainerStyle={styles.list}
+                showsVerticalScrollIndicator={false}
             />
         </View>
     );
@@ -70,29 +89,17 @@ const Page = () => {
 export default Page;
 
 const styles = StyleSheet.create({
-    container: { flex: 1, backgroundColor: '#fff' },
-    searchBar: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        paddingHorizontal: 16,
-        marginVertical: 12,
-        borderRadius: 8,
-        borderWidth: 1,
-        borderColor: '#ddd',
-        backgroundColor: '#f9f9f9',
-    },
-    searchInput: {
+    container: {
         flex: 1,
-        marginHorizontal: 8,
-        ...Platform.select({
-            ios: { height: 36 },
-            android: { height: 44 },
-        }),
+        backgroundColor: '#fff',
     },
-    list: { paddingHorizontal: 16, paddingBottom: 24 },
+    list: {
+        paddingHorizontal: 16,
+        paddingBottom: 24,
+    },
     card: {
-        marginBottom: 24,
-        borderRadius: 8,
+        marginBottom: 20,
+        borderRadius: 10,
         overflow: 'hidden',
         backgroundColor: '#fff',
         elevation: 2,

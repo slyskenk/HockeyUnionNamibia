@@ -14,7 +14,7 @@ const TabLayout = () => {
             <Tabs.Screen name='teams' options={{title: 'Teams'}} />
             <Tabs.Screen name='events' options={{title: 'Events'}} />
             <Tabs.Screen name='history' options={{title: 'History'}} />
-            <Tabs.Screen name='profile' options={{title: 'Profile'}} />
+            
         </Tabs>
 
     )

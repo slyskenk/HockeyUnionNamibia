@@ -8,7 +8,7 @@ import LoginScreen from './(auth)/LoginScreen';
 import SignupScreen from './(auth)/SignupScreen';
 import SplashScreen from './(auth)/SplashScreen';
 import NewsScreen from './(tabs)/news';
-import ProfileScreen from './(tabs)/profile';
+import ProfileScreen from './profile/profile';
 import TeamsScreen from './(tabs)/teams'; // Fix casing if needed
 import RegisterTeamScreen from './teams/registerTeam';
 import EditTeamScreen from './teams/editTeam';

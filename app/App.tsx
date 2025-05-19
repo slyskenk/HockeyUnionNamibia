@@ -12,6 +12,8 @@ import ProfileScreen from './(tabs)/profile';
 import TeamsScreen from './(tabs)/teams'; // Fix casing if needed
 import RegisterTeamScreen from './teams/registerTeam';
 import EditTeamScreen from './teams/editTeam';
+import EditProfileScreen from './profile/editProfile';
+import SettingsScreen from './profile/settingScreen';
 
 
 
@@ -44,6 +46,9 @@ export default function App() {
         <Stack.Screen name="CreateEvent" component={CreateEventScreen} />
         <Stack.Screen name ="registerTeam" component={RegisterTeamScreen}/>
         <Stack.Screen name ="editTeam" component={EditTeamScreen}/>
+        <Stack.Screen name ="editProfile" component={EditProfileScreen}/>
+        <Stack.Screen name="Settings" component={SettingsScreen} />
+
       </Stack.Navigator>
     </NavigationContainer>
   );

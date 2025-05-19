@@ -1,117 +1,195 @@
-import React from 'react';
-import { View, Text, StyleSheet, Image, TouchableOpacity } from 'react-native';
+import React, { useEffect, useState } from 'react';
+import {
+  View,
+  Text,
+  StyleSheet,
+  TouchableOpacity,
+  Image,
+  Platform,
+  ScrollView,
+} from 'react-native';
 import { useNavigation } from '@react-navigation/native';
+import { getAuth } from 'firebase/auth';
+import { Ionicons } from '@expo/vector-icons';
+import { router } from 'expo-router';
+import { doc, getDoc } from 'firebase/firestore';
+import { db as firestore } from '../../firebase/firebase';
 
 const ProfileScreen = () => {
-    const navigation = useNavigation();
+  const navigation = useNavigation();
+  const auth = getAuth();
+  const user = auth.currentUser;
 
-    // Dummy data for the user profile.  Replace with your actual data source.
-    const profileData = {
-        name: 'John Doe',
-        email: 'john.doe@example.com',
-        phone: '+1 498 788 9999',
-        avatar: 'https://via.placeholder.com/150', // Replace with a real image URL
+  const [profileData, setProfileData] = useState({
+    name: '',
+    email: '',
+    phone: '',
+    avatar: null,
+  });
+
+  useEffect(() => {
+    const fetchUserData = async () => {
+      if (user) {
+        try {
+          const docRef = doc(firestore, 'users', user.uid);
+          const docSnap = await getDoc(docRef);
+
+          if (docSnap.exists()) {
+            const data = docSnap.data();
+            setProfileData({
+              name: data.name || user.displayName || 'John Doe',
+              email: data.email || user.email || 'john.doe@example.com',
+              phone: data.phone || '+1 498 788 9999',
+              avatar: data.avatar || null,
+            });
+          } else {
+            console.log('No user document found!');
+          }
+        } catch (error) {
+          console.error('Error fetching user data:', error);
+        }
+      }
     };
 
-    const handleEditProfile = () => {
-        // Navigate to the edit profile screen.  You'll need to create this screen.
-        navigation.navigate('EditProfile');
-    };
+    fetchUserData();
+  }, []);
 
-    return (
-        <View style={styles.container}>
-            <View style={styles.header}>
-                <TouchableOpacity onPress={() => navigation.goBack()}>
-                    {/* Use an icon here if you have one, or a simple Text */}
-                    <Text style={styles.backButtonText}>←</Text>
-                </TouchableOpacity>
-                <Text style={styles.headerTitle}>Profile</Text>
-                {/* Leave this empty, or add a settings icon if needed */}
-                <View style={{ width: 24 }} />
-            </View>
+  return (
+    <ScrollView contentContainerStyle={styles.container}>
+      {/* Header */}
+      <View style={styles.header}>
+        <TouchableOpacity onPress={() => navigation.goBack()}>
+          <Ionicons name="chevron-back" size={28} color="black" />
+        </TouchableOpacity>
+        <Text style={styles.headerTitle}>Profile</Text>
+        <TouchableOpacity
+          onPress={() => router.push('/profile/settingScreen')}
+          style={{ padding: 4 }}
+        >
+          <Ionicons name="settings-outline" size={26} color="black" />
+        </TouchableOpacity>
+      </View>
 
-            <View style={styles.profileContainer}>
-                <Image source={{ uri: profileData.avatar }} style={styles.avatar} />
-                <TouchableOpacity style={styles.editProfileButton} onPress={handleEditProfile}>
-                    <Text style={styles.editProfileButtonText}>Edit Profile</Text>
-                </TouchableOpacity>
+      {/* Profile Picture + Edit Button */}
+      <View style={styles.profileContainer}>
+        {profileData?.avatar ? (
+          <Image
+            source={{ uri: profileData.avatar }}
+            style={styles.avatar}
+            onError={() =>
+              setProfileData((prev) => ({ ...prev, avatar: null }))
+            }
+          />
+        ) : (
+          <Image
+            source={require('../../assets/images/avatar.jpg')}
+            style={styles.avatar}
+          />
+        )}
 
-                <View style={styles.userInfoContainer}>
-                    <Text style={styles.label}>Username</Text>
-                    <Text style={styles.info}>{profileData.name}</Text>
-                </View>
+        <TouchableOpacity
+          style={styles.editProfileButton}
+          onPress={() => router.push('/profile/editProfile')}
+        >
+          <Text style={styles.editProfileButtonText}>Edit Profile</Text>
+        </TouchableOpacity>
+      </View>
 
-                <View style={styles.userInfoContainer}>
-                    <Text style={styles.label}>Email</Text>
-                    <Text style={styles.info}>{profileData.email}</Text>
-                </View>
-
-                <View style={styles.userInfoContainer}>
-                    <Text style={styles.label}>Phone Number</Text>
-                    <Text style={styles.info}>{profileData.phone}</Text>
-                </View>
-            </View>
+      {/* Modern User Info Container */}
+      <View style={styles.infoContainer}>
+        <View style={styles.infoRow}>
+          <Text style={styles.label}>Full Name</Text>
+          <Text style={styles.info}>{profileData.name}</Text>
         </View>
-    );
+        <View style={styles.divider} />
+        <View style={styles.infoRow}>
+          <Text style={styles.label}>Email</Text>
+          <Text style={styles.info}>{profileData.email}</Text>
+        </View>
+        <View style={styles.divider} />
+        <View style={styles.infoRow}>
+          <Text style={styles.label}>Phone Number</Text>
+          <Text style={styles.info}>{profileData.phone}</Text>
+        </View>
+      </View>
+    </ScrollView>
+  );
 };
 
 const styles = StyleSheet.create({
-    container: {
-        flex: 1,
-        backgroundColor: '#fff',
-    },
-    header: {
-        flexDirection: 'row',
-        justifyContent: 'space-between',
-        alignItems: 'center',
-        padding: 16,
-        marginTop: 20, // Add space for status bar on iOS
-    },
-    headerTitle: {
-        fontSize: 24,
-        fontWeight: 'bold',
-        color: 'black',
-    },
-    backButtonText: {
-        fontSize: 24,
-        color: 'black',
-    },
-    profileContainer: {
-        alignItems: 'center',
-        padding: 16,
-    },
-    avatar: {
-        width: 150,
-        height: 150,
-        borderRadius: 75,
-        marginBottom: 20,
-    },
-    editProfileButton: {
-        backgroundColor: '#007BFF', //  blue
-        paddingHorizontal: 20,
-        paddingVertical: 10,
-        borderRadius: 8,
-        marginBottom: 30,
-    },
-    editProfileButtonText: {
-        color: '#fff',
-        fontSize: 16,
-        fontWeight: 'bold',
-    },
-    userInfoContainer: {
-        width: '100%',
-        marginBottom: 20,
-    },
-    label: {
-        fontSize: 16,
-        color: '#888',
-        marginBottom: 4,
-    },
-    info: {
-        fontSize: 18,
-        color: 'black',
-        fontWeight: 'bold',
-    },
+  container: {
+    paddingBottom: 40,
+    backgroundColor: '#f2f4f8',
+  },
+  header: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingTop: Platform.OS === 'android' ? 40 : 60,
+    paddingHorizontal: 16,
+    paddingBottom: 12,
+    backgroundColor: '#fff',
+    borderBottomWidth: 1,
+    borderColor: '#eee',
+  },
+  headerTitle: {
+    fontSize: 22,
+    fontWeight: '700',
+    color: '#222',
+  },
+  profileContainer: {
+    alignItems: 'center',
+    paddingVertical: 24,
+  },
+  avatar: {
+    width: 130,
+    height: 130,
+    borderRadius: 65,
+    borderWidth: 2,
+    borderColor: '#ccc',
+    backgroundColor: '#ddd',
+    marginBottom: 16,
+  },
+  editProfileButton: {
+    backgroundColor: '#007BFF',
+    paddingHorizontal: 24,
+    paddingVertical: 12,
+    borderRadius: 10,
+  },
+  editProfileButtonText: {
+    color: '#fff',
+    fontSize: 16,
+    fontWeight: '600',
+  },
+  infoContainer: {
+    marginHorizontal: 20,
+    backgroundColor: '#fff',
+    borderRadius: 16,
+    padding: 20,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.08,
+    shadowRadius: 4,
+    elevation: 3,
+  },
+  infoRow: {
+    marginBottom: 16,
+  },
+  label: {
+    fontSize: 13,
+    color: '#777',
+    marginBottom: 4,
+  },
+  info: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#222',
+  },
+  divider: {
+    height: 1,
+    backgroundColor: '#eee',
+    marginVertical: 4,
+  },
 });
 
 export default ProfileScreen;

@@ -1,173 +1,229 @@
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, TextInput, TouchableOpacity, Image } from 'react-native';
+import {
+  View,
+  Text,
+  StyleSheet,
+  TextInput,
+  TouchableOpacity,
+  Image,
+  Alert,
+  Platform,
+} from 'react-native';
 import { useNavigation } from '@react-navigation/native';
+import * as ImagePicker from 'expo-image-picker';
+import { getStorage, ref, uploadBytes, getDownloadURL } from 'firebase/storage';
+import { getFirestore, doc, setDoc } from 'firebase/firestore';
+import { getAuth, updateProfile, reload } from 'firebase/auth';
+import { Ionicons } from '@expo/vector-icons';
 
 const EditProfileScreen = () => {
-    const navigation = useNavigation();
+  const navigation = useNavigation();
+  const auth = getAuth();
+  const user = auth.currentUser;
+  const db = getFirestore();
+  const storage = getStorage();
 
-    // Dummy data for the user profile.  Replace with your actual data source and state management.
-    const [profileData, setProfileData] = useState({
-        name: 'John Doe',
-        email: 'john.doe@example.com',
-        phone: '+1 498 788 9999',
-        password: 'password123', // In a real app, handle password securely!
-        avatar: 'https://via.placeholder.com/150', // Replace with a real image URL
-    });
+  const [profileData, setProfileData] = useState({
+    name: user?.displayName || 'John Doe',
+    email: user?.email || '',
+    phone: '+1 498 788 9999',
+    password: '',
+    avatar: user?.photoURL || 'https://via.placeholder.com/150',
+  });
 
-    const handleInputChange = (field: keyof typeof profileData, value: string) => {
-        setProfileData(prevData => ({
-            ...prevData,
-            [field]: value,
-        }));
-    };
+  const handleInputChange = (field, value) => {
+    setProfileData((prev) => ({ ...prev, [field]: value }));
+  };
 
-    const handleUpdateProfile = () => {
-        // Implement your profile update logic here.
-        console.log('Updated Profile Data:', profileData);
-        // After successful update, you might want to navigate back.
-        navigation.goBack();
-    };
-
-    const handleChangePicture = () => {
-        // Handle image selection logic here
-        console.log('Change Picture')
+  const handleChangePicture = async () => {
+    const permissionResult = await ImagePicker.requestMediaLibraryPermissionsAsync();
+    if (!permissionResult.granted) {
+      Alert.alert('Permission Required', 'Camera roll permission is required.');
+      return;
     }
 
-    return (
-        <View style={styles.container}>
-            <View style={styles.header}>
-                <TouchableOpacity onPress={() => navigation.goBack()}>
-                    {/* Use an icon here if you have one, or a simple Text */}
-                    <Text style={styles.backButtonText}>←</Text>
-                </TouchableOpacity>
-                <Text style={styles.headerTitle}>Edit Profile</Text>
-                {/* Leave this empty, or add a settings icon if needed */}
-                <View style={{ width: 24 }} />
-            </View>
+    const pickerResult = await ImagePicker.launchImageLibraryAsync({
+      allowsEditing: true,
+      quality: 0.7,
+      aspect: [1, 1],
+    });
 
-            <View style={styles.profileContainer}>
-                <Image source={{ uri: profileData.avatar }} style={styles.avatar} />
-                <TouchableOpacity style={styles.changePictureButton} onPress={handleChangePicture}>
-                    <Text style={styles.changePictureButtonText}>Change Picture</Text>
-                </TouchableOpacity>
+    if (!pickerResult.canceled && pickerResult.assets.length > 0) {
+      try {
+        const image = pickerResult.assets[0];
+        const response = await fetch(image.uri);
+        const blob = await response.blob();
 
-                <View style={styles.inputContainer}>
-                    <Text style={styles.label}>Username</Text>
-                    <TextInput
-                        style={styles.input}
-                        value={profileData.name}
-                        onChangeText={(text) => handleInputChange('name', text)}
-                    />
-                </View>
+        const fileRef = ref(storage, `avatars/${user.uid}`);
+        await uploadBytes(fileRef, blob);
+        const downloadURL = await getDownloadURL(fileRef);
+        console.log('✅ Avatar download URL:', downloadURL);
 
-                <View style={styles.inputContainer}>
-                    <Text style={styles.label}>Email Id</Text>
-                    <TextInput
-                        style={styles.input}
-                        value={profileData.email}
-                        onChangeText={(text) => handleInputChange('email', text)}
-                        keyboardType="email-address"
-                    />
-                </View>
+        setProfileData((prev) => ({ ...prev, avatar: downloadURL }));
+      } catch (error) {
+        console.error('❌ Error uploading image:', error);
+        Alert.alert('Upload failed', 'Could not upload image.');
+      }
+    }
+  };
 
-                <View style={styles.inputContainer}>
-                    <Text style={styles.label}>Phone Number</Text>
-                    <TextInput
-                        style={styles.input}
-                        value={profileData.phone}
-                        onChangeText={(text) => handleInputChange('phone', text)}
-                        keyboardType="phone-pad"
-                    />
-                </View>
+  const handleUpdateProfile = async () => {
+    try {
+      if (!user) return;
 
-                <View style={styles.inputContainer}>
-                    <Text style={styles.label}>Password</Text>
-                    <TextInput
-                        style={styles.input}
-                        value={profileData.password}
-                        onChangeText={(text) => handleInputChange('password', text)}
-                        secureTextEntry
-                    />
-                </View>
+      // Update Firestore
+      await setDoc(doc(db, 'users', user.uid), {
+        name: profileData.name,
+        email: profileData.email,
+        phone: profileData.phone,
+        avatar: profileData.avatar,
+      });
 
-                <TouchableOpacity style={styles.updateButton} onPress={handleUpdateProfile}>
-                    <Text style={styles.updateButtonText}>Update</Text>
-                </TouchableOpacity>
-            </View>
+      // Update Firebase Auth Profile
+      await updateProfile(user, {
+        displayName: profileData.name,
+        photoURL: profileData.avatar,
+      });
+
+      // Refresh user object to get updated photoURL
+      await reload(user);
+
+      // Update state with new avatar
+      setProfileData((prev) => ({
+        ...prev,
+        avatar: user.photoURL,
+      }));
+
+      Alert.alert('Success', 'Profile updated successfully.');
+      navigation.goBack();
+    } catch (error) {
+      Alert.alert('Error', error.message);
+    }
+  };
+
+  return (
+    <View style={styles.container}>
+      <View style={styles.header}>
+        <TouchableOpacity onPress={() => navigation.goBack()}>
+          <Ionicons name="chevron-back" size={28} color="black" />
+        </TouchableOpacity>
+        <Text style={styles.headerTitle}>Edit Profile</Text>
+        <View style={{ width: 28 }} />
+      </View>
+
+      <View style={styles.profileSection}>
+        <Image source={{ uri: profileData.avatar }} style={styles.avatar} />
+        <TouchableOpacity onPress={handleChangePicture}>
+          <Text style={styles.changePicture}>Change Profile Picture</Text>
+        </TouchableOpacity>
+
+        <View style={styles.inputGroup}>
+          <Text style={styles.label}>Full Name</Text>
+          <TextInput
+            style={styles.input}
+            value={profileData.name}
+            onChangeText={(text) => handleInputChange('name', text)}
+          />
         </View>
-    );
+
+        <View style={styles.inputGroup}>
+          <Text style={styles.label}>Email</Text>
+          <TextInput
+            style={styles.input}
+            value={profileData.email}
+            onChangeText={(text) => handleInputChange('email', text)}
+            keyboardType="email-address"
+          />
+        </View>
+
+        <View style={styles.inputGroup}>
+          <Text style={styles.label}>Phone</Text>
+          <TextInput
+            style={styles.input}
+            value={profileData.phone}
+            onChangeText={(text) => handleInputChange('phone', text)}
+            keyboardType="phone-pad"
+          />
+        </View>
+
+        <TouchableOpacity style={styles.button} onPress={handleUpdateProfile}>
+          <Text style={styles.buttonText}>Save Changes</Text>
+        </TouchableOpacity>
+      </View>
+    </View>
+  );
 };
 
 const styles = StyleSheet.create({
-    container: {
-        flex: 1,
-        backgroundColor: '#fff',
-    },
-    header: {
-        flexDirection: 'row',
-        justifyContent: 'space-between',
-        alignItems: 'center',
-        padding: 16,
-        marginTop: 20, // Add space for status bar on iOS
-    },
-    headerTitle: {
-        fontSize: 24,
-        fontWeight: 'bold',
-        color: 'black',
-    },
-    backButtonText: {
-        fontSize: 24,
-        color: 'black',
-    },
-    profileContainer: {
-        alignItems: 'center',
-        padding: 16,
-    },
-    avatar: {
-        width: 150,
-        height: 150,
-        borderRadius: 75,
-        marginBottom: 20,
-    },
-    changePictureButton: {
-        marginBottom: 30,
-    },
-    changePictureButtonText: {
-        color: '#007BFF', //  blue
-        fontSize: 16,
-    },
-    inputContainer: {
-        width: '100%',
-        marginBottom: 20,
-    },
-    label: {
-        fontSize: 16,
-        color: '#888',
-        marginBottom: 4,
-    },
-    input: {
-        height: 48,
-        borderRadius: 8,
-        borderColor: '#ddd',
-        borderWidth: 1,
-        paddingHorizontal: 12,
-        fontSize: 18,
-        color: 'black',
-    },
-    updateButton: {
-        backgroundColor: '#007BFF', //  blue
-        paddingHorizontal: 20,
-        paddingVertical: 12,
-        borderRadius: 8,
-        marginTop: 30,
-        width: '100%',
-        alignItems: 'center'
-    },
-    updateButtonText: {
-        color: '#fff',
-        fontSize: 18,
-        fontWeight: 'bold',
-    },
+  container: {
+    flex: 1,
+    backgroundColor: '#f9fafc',
+  },
+  header: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingTop: Platform.OS === 'android' ? 40 : 60,
+    paddingHorizontal: 16,
+    paddingBottom: 12,
+    backgroundColor: '#fff',
+    borderBottomWidth: 1,
+    borderColor: '#eee',
+  },
+  headerTitle: {
+    fontSize: 20,
+    fontWeight: 'bold',
+    color: '#222',
+  },
+  profileSection: {
+    alignItems: 'center',
+    padding: 20,
+  },
+  avatar: {
+    width: 120,
+    height: 120,
+    borderRadius: 60,
+    marginBottom: 10,
+    backgroundColor: '#ddd',
+    borderWidth: 2,
+    borderColor: '#ccc',
+  },
+  changePicture: {
+    fontSize: 15,
+    color: '#007BFF',
+    marginBottom: 30,
+  },
+  inputGroup: {
+    width: '100%',
+    marginBottom: 16,
+  },
+  label: {
+    marginBottom: 6,
+    color: '#666',
+    fontSize: 14,
+    fontWeight: '500',
+  },
+  input: {
+    backgroundColor: '#fff',
+    padding: 14,
+    fontSize: 16,
+    borderRadius: 10,
+    borderWidth: 1,
+    borderColor: '#ddd',
+  },
+  button: {
+    backgroundColor: '#007BFF',
+    paddingVertical: 14,
+    borderRadius: 10,
+    marginTop: 20,
+    width: '100%',
+    alignItems: 'center',
+  },
+  buttonText: {
+    color: '#fff',
+    fontSize: 16,
+    fontWeight: '600',
+  },
 });
 
 export default EditProfileScreen;

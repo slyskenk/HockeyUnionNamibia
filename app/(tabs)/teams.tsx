@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import {
   View,
   Text,
@@ -13,8 +13,16 @@ import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
 import { router } from 'expo-router';
 
-// Dummy data for local teams - Replace with your actual data source
-const localTeamsData = [
+// Define the Team type
+interface Team {
+  id: string;
+  name: string;
+  coach: string;
+  logo: string | number;
+}
+
+// Dummy data
+const localTeamsData: Team[] = [
   {
     id: 'indoor-men-saints',
     name: 'Indoor Men Saints',
@@ -41,10 +49,28 @@ const localTeamsData = [
   },
 ];
 
-const LocalTeamsScreen = () => {
+const TeamsScreen = () => {
   const navigation = useNavigation();
   const [searchQuery, setSearchQuery] = useState('');
-  const [teams, setTeams] = useState(localTeamsData);
+  const [teams, setTeams] = useState<Team[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        setTimeout(() => {
+          setTeams(localTeamsData);
+          setLoading(false);
+        }, 500);
+      } catch (err: any) {
+        setError(err.message || 'Failed to load teams data.');
+        setLoading(false);
+      }
+    };
+
+    fetchData();
+  }, []);
 
   const handleSearch = (query: string) => {
     setSearchQuery(query);
@@ -58,6 +84,25 @@ const LocalTeamsScreen = () => {
     router.push({ pathname: '/teams/editTeam', params: { teamId } });
   };
 
+  if (loading) {
+    return (
+      <View style={styles.loadingContainer}>
+        <Text>Loading Teams...</Text>
+      </View>
+    );
+  }
+
+  if (error) {
+    return (
+      <View style={styles.errorContainer}>
+        <Text style={styles.errorText}>Error: {error}</Text>
+        <TouchableOpacity onPress={() => setError(null)}>
+          <Text style={styles.retryText}>Retry</Text>
+        </TouchableOpacity>
+      </View>
+    );
+  }
+
   return (
     <ScrollView style={styles.container}>
       {/* Header */}
@@ -65,7 +110,7 @@ const LocalTeamsScreen = () => {
         <Text style={styles.headerTitle}>Local Teams</Text>
       </View>
 
-      {/* Search Bar */}
+      {/* Search */}
       <View style={styles.searchContainer}>
         <TextInput
           style={styles.searchInput}
@@ -73,14 +118,10 @@ const LocalTeamsScreen = () => {
           value={searchQuery}
           onChangeText={handleSearch}
         />
-        <MaterialCommunityIcons
-          name="microphone-outline"
-          size={24}
-          color="#888"
-        />
+        <MaterialCommunityIcons name="microphone-outline" size={24} color="#888" />
       </View>
 
-      {/* Indoor Men Premier */}
+      {/* Indoor Men */}
       <Text style={styles.sectionTitle}>Indoor Men Premier</Text>
       {teams
         .filter((team) => team.name.toLowerCase().includes('indoor men'))
@@ -91,18 +132,16 @@ const LocalTeamsScreen = () => {
             onPress={() => goToEditClub(team.id)}
           >
             <View style={styles.teamInfo}>
-              <Image source={{ uri: team.logo }} style={styles.teamLogo} />
+              <Image source={{ uri: team.logo as string }} style={styles.teamLogo} />
               <View>
                 <Text style={styles.teamName}>{team.name}</Text>
-                <Text style={styles.coach}>
-                  Current Coach: {team.coach}
-                </Text>
+                <Text style={styles.coach}>Current Coach: {team.coach}</Text>
               </View>
             </View>
           </TouchableOpacity>
         ))}
 
-      {/* Indoor Women Premier */}
+      {/* Indoor Women */}
       <Text style={styles.sectionTitle}>Indoor Women Premier</Text>
       {teams
         .filter((team) => team.name.toLowerCase().includes('indoor women'))
@@ -113,12 +152,10 @@ const LocalTeamsScreen = () => {
             onPress={() => goToEditClub(team.id)}
           >
             <View style={styles.teamInfo}>
-              <Image source={{ uri: team.logo }} style={styles.teamLogo} />
+              <Image source={{ uri: team.logo as string }} style={styles.teamLogo} />
               <View>
                 <Text style={styles.teamName}>{team.name}</Text>
-                <Text style={styles.coach}>
-                  Current Coach: {team.coach}
-                </Text>
+                <Text style={styles.coach}>Current Coach: {team.coach}</Text>
               </View>
             </View>
           </TouchableOpacity>
@@ -130,10 +167,7 @@ const LocalTeamsScreen = () => {
           style={styles.registerButton}
           onPress={() => router.push('/teams/registerTeam')}
         >
-          <LinearGradient
-            colors={['#4a148c', '#1a237e']}
-            style={styles.gradient}
-          >
+          <LinearGradient colors={['#4a148c', '#1a237e']} style={styles.gradient}>
             <Text style={styles.buttonText}>Register a club</Text>
           </LinearGradient>
         </TouchableOpacity>
@@ -142,10 +176,7 @@ const LocalTeamsScreen = () => {
           style={styles.editButton}
           onPress={() => router.push('/teams/editTeam')}
         >
-          <LinearGradient
-            colors={['#007BFF', '#0040FF']}
-            style={styles.gradient}
-          >
+          <LinearGradient colors={['#007BFF', '#0040FF']} style={styles.gradient}>
             <Text style={styles.buttonText}>Edit a club</Text>
           </LinearGradient>
         </TouchableOpacity>
@@ -155,19 +186,9 @@ const LocalTeamsScreen = () => {
 };
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#fff',
-  },
-  header: {
-    padding: 16,
-    marginTop: 20,
-  },
-  headerTitle: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    color: 'black',
-  },
+  container: { flex: 1, backgroundColor: '#fff' },
+  header: { padding: 16, marginTop: 20 },
+  headerTitle: { fontSize: 24, fontWeight: 'bold', color: 'black' },
   searchContainer: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -204,15 +225,8 @@ const styles = StyleSheet.create({
     borderRadius: 25,
     marginRight: 16,
   },
-  teamName: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    color: 'black',
-  },
-  coach: {
-    fontSize: 14,
-    color: '#666',
-  },
+  teamName: { fontSize: 18, fontWeight: 'bold', color: 'black' },
+  coach: { fontSize: 14, color: '#666' },
   buttonContainer: {
     flexDirection: 'row',
     justifyContent: 'space-around',
@@ -237,15 +251,12 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     borderRadius: 8,
   },
-  buttonText: {
-    fontSize: 16,
-    fontWeight: 'bold',
-    color: '#fff',
-  },
-  teamInfo: {
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
+  buttonText: { fontSize: 16, fontWeight: 'bold', color: '#fff' },
+  teamInfo: { flexDirection: 'row', alignItems: 'center' },
+  loadingContainer: { flex: 1, justifyContent: 'center', alignItems: 'center' },
+  errorContainer: { flex: 1, justifyContent: 'center', alignItems: 'center', padding: 16 },
+  errorText: { color: 'red', fontSize: 18, marginBottom: 10, textAlign: 'center' },
+  retryText: { color: 'blue', fontSize: 16, textDecorationLine: 'underline' },
 });
 
-export default LocalTeamsScreen;
+export default TeamsScreen;

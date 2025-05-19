@@ -58,17 +58,19 @@ const ProfileScreen = () => {
     <ScrollView contentContainerStyle={styles.scrollContent}>
       {/* Header */}
       <View style={styles.header}>
-        <TouchableOpacity onPress={() => navigation.goBack()}>
-          <Ionicons name="chevron-back" size={28} color="black" />
-        </TouchableOpacity>
-        <Text style={styles.headerTitle}>Profile</Text>
-        <TouchableOpacity
-          onPress={() => router.push('/profile/settingScreen')}
-          style={{ padding: 4 }}
-        >
-          <Ionicons name="settings-outline" size={26} color="black" />
-        </TouchableOpacity>
-      </View>
+  <TouchableOpacity onPress={() => navigation.goBack()}>
+    <Ionicons name="chevron-back" size={28} color="black" />
+  </TouchableOpacity>
+
+  <Text style={styles.headerTitle}>Profile</Text>
+
+  <TouchableOpacity
+    onPress={() => router.push('/profile/settingScreen')}
+    style={{ padding: 4 }}
+  >
+    <Ionicons name="settings-outline" size={26} color="black" />
+  </TouchableOpacity>
+</View>
 
       {/* Profile Picture + Edit Button */}
       <View style={styles.profileContainer}>

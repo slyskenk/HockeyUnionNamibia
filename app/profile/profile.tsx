@@ -7,10 +7,12 @@ import {
   Image,
   Platform,
   ScrollView,
+  Alert,
+  Animated,
 } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { getAuth } from 'firebase/auth';
-import { Ionicons } from '@expo/vector-icons';
+import { Ionicons, MaterialIcons } from '@expo/vector-icons';
 import { router } from 'expo-router';
 import { doc, getDoc } from 'firebase/firestore';
 import { db as firestore } from '../../firebase/firebase';
@@ -26,6 +28,9 @@ const ProfileScreen = () => {
     phone: '',
     avatar: null,
   });
+
+  const [scaleEdit] = useState(new Animated.Value(1));
+  const [scaleLogout] = useState(new Animated.Value(1));
 
   useEffect(() => {
     const fetchUserData = async () => {
@@ -54,23 +59,52 @@ const ProfileScreen = () => {
     fetchUserData();
   }, []);
 
+  const handleLogout = () => {
+    Alert.alert('Confirm Logout', 'Are you sure you want to log out?', [
+      { text: 'Cancel', style: 'cancel' },
+      {
+        text: 'Logout',
+        style: 'destructive',
+        onPress: () => {
+          auth.signOut();
+          router.replace('/');
+        },
+      },
+    ]);
+  };
+
+  const animateButton = (button: Animated.Value, callback: () => void) => {
+    Animated.sequence([
+      Animated.timing(button, {
+        toValue: 0.95,
+        duration: 100,
+        useNativeDriver: true,
+      }),
+      Animated.timing(button, {
+        toValue: 1,
+        duration: 100,
+        useNativeDriver: true,
+      }),
+    ]).start(callback);
+  };
+
   return (
     <ScrollView contentContainerStyle={styles.scrollContent}>
       {/* Header */}
       <View style={styles.header}>
-  <TouchableOpacity onPress={() => navigation.goBack()}>
-    <Ionicons name="chevron-back" size={28} color="black" />
-  </TouchableOpacity>
+        <TouchableOpacity onPress={() => navigation.goBack()}>
+          <Ionicons name="chevron-back" size={28} color="black" />
+        </TouchableOpacity>
 
-  <Text style={styles.headerTitle}>Profile</Text>
+        <Text style={styles.headerTitle}>Profile</Text>
 
-  <TouchableOpacity
-    onPress={() => router.push('/profile/settingScreen')}
-    style={{ padding: 4 }}
-  >
-    <Ionicons name="settings-outline" size={26} color="black" />
-  </TouchableOpacity>
-</View>
+        <TouchableOpacity
+          onPress={() => router.push('/profile/settingScreen')}
+          style={{ padding: 4 }}
+        >
+          <Ionicons name="settings-outline" size={26} color="black" />
+        </TouchableOpacity>
+      </View>
 
       {/* Profile Picture + Edit Button */}
       <View style={styles.profileContainer}>
@@ -89,12 +123,15 @@ const ProfileScreen = () => {
           />
         )}
 
-        <TouchableOpacity
-          style={styles.editProfileButton}
-          onPress={() => router.push('/profile/editProfile')}
-        >
-          <Text style={styles.editProfileButtonText}>Edit Profile</Text>
-        </TouchableOpacity>
+        <Animated.View style={{ transform: [{ scale: scaleEdit }] }}>
+          <TouchableOpacity
+            style={styles.editProfileButton}
+            onPress={() => animateButton(scaleEdit, () => router.push('/profile/editProfile'))}
+          >
+            <Ionicons name="pencil" size={18} color="#fff" style={{ marginRight: 8 }} />
+            <Text style={styles.editProfileButtonText}>Edit Profile</Text>
+          </TouchableOpacity>
+        </Animated.View>
       </View>
 
       {/* User Info */}
@@ -115,20 +152,19 @@ const ProfileScreen = () => {
         </View>
       </View>
 
-      {/* Surprise Footer */}
+      {/* Footer */}
       <View style={styles.footer}>
-        <Text style={styles.quote}>
-          "Coffee. Code. Sleep. Repeat."
-        </Text>
-        <TouchableOpacity
-          style={styles.logoutButton}
-          onPress={() => {
-            auth.signOut();
-            router.replace('/'); // Adjust route if needed
-          }}
-        >
-          <Text style={styles.logoutText}>Log Out</Text>
-        </TouchableOpacity>
+        <Text style={styles.quote}>“Coffee. Code. Sleep. Repeat.”</Text>
+
+        <Animated.View style={{ transform: [{ scale: scaleLogout }] }}>
+          <TouchableOpacity
+            style={styles.logoutButton}
+            onPress={() => animateButton(scaleLogout, handleLogout)}
+          >
+            <MaterialIcons name="logout" size={18} color="#fff" style={{ marginRight: 8 }} />
+            <Text style={styles.logoutText}>Log Out</Text>
+          </TouchableOpacity>
+        </Animated.View>
       </View>
     </ScrollView>
   );
@@ -171,6 +207,8 @@ const styles = StyleSheet.create({
     marginBottom: 16,
   },
   editProfileButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
     backgroundColor: '#007BFF',
     paddingHorizontal: 24,
     paddingVertical: 12,
@@ -232,6 +270,8 @@ const styles = StyleSheet.create({
     textAlign: 'center',
   },
   logoutButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
     backgroundColor: '#FF3B30',
     paddingHorizontal: 24,
     paddingVertical: 12,

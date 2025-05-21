@@ -1,27 +1,26 @@
 import React from 'react';
-import { View, Text, StyleSheet, ScrollView, Image } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, Image, TouchableOpacity } from 'react-native';
 
-// Dummy data for achievements.  Replace with your actual data source.
 const achievements = [
     {
         year: 1990,
         event: "Women's Field Hockey: 2nd at Africa Cup of Nations (Harare)",
-        image: require('../../assets/images/events/20241218-Hockey-Nkosi-Cup-Final-1-Namibia-Celebrate-Win-1024x640.jpg'), // Replace with actual image path
+        image: require('../../assets/images/events/20241218-Hockey-Nkosi-Cup-Final-1-Namibia-Celebrate-Win-1024x640.jpg'),
     },
     {
         year: 1995,
         event: "First African Games appearances for both Men's (5th) and Women's (4th) Field Hockey",
-        image: require('../../assets/images/events/20241218-Hockey-Nkosi-Cup-Final-1-Namibia-Celebrate-Win-1024x640.jpg'), // Replace with actual image path
+        image: require('../../assets/images/events/20241218-Hockey-Nkosi-Cup-Final-1-Namibia-Celebrate-Win-1024x640.jpg'),
     },
     {
-        year: 1990,
-        event: "Women's Field Hockey: 2nd at Africa Cup of Nations (Harare)",
-        image: require('../../assets/images/events/20241218-Hockey-Nkosi-Cup-Final-1-Namibia-Celebrate-Win-1024x640.jpg'),  // Replace with actual image path
+        year: 2003,
+        event: "Men's Field Hockey: Bronze at African Games",
+        image: require('../../assets/images/events/20241218-Hockey-Nkosi-Cup-Final-1-Namibia-Celebrate-Win-1024x640.jpg'),
     },
     {
-        year: 1995,
-        event: "First African Games appearances for both Men's (5th) and Women's (4th) Field Hockey",
-        image: require('../../assets/images/events/20241218-Hockey-Nkosi-Cup-Final-1-Namibia-Celebrate-Win-1024x640.jpg'), // Replace with actual image path
+        year: 2018,
+        event: "Women's Team: Qualified for Hockey World League Semifinals",
+        image: require('../../assets/images/events/20241218-Hockey-Nkosi-Cup-Final-1-Namibia-Celebrate-Win-1024x640.jpg'),
     },
 ];
 
@@ -29,20 +28,23 @@ const HistoryScreen = () => {
     return (
         <ScrollView style={styles.container}>
             <View style={styles.header}>
-                <Text style={styles.headerTitle}>History</Text>
-                <Text style={styles.headerSubtitle}>Backlog of all our achievements...</Text>
+                <Text style={styles.headerTitle}>🏑 Our Legacy</Text>
+                <Text style={styles.headerSubtitle}>A timeline of proud moments in Namibian hockey</Text>
             </View>
 
-            <View style={styles.achievementsContainer}>
+            <View style={styles.timeline}>
                 {achievements.map((achievement, index) => (
-                    <View key={index} style={styles.achievementItem}>
-                        <View style={styles.timelineDot} />
-                        <View style={styles.textContainer}>
+                    <TouchableOpacity key={index} style={styles.card} activeOpacity={0.8} onPress={() => { /* Future navigation to detail */ }}>
+                        <View style={styles.leftColumn}>
+                            <View style={styles.dot} />
+                            {index !== achievements.length - 1 && <View style={styles.verticalLine} />}
+                        </View>
+                        <View style={styles.content}>
                             <Text style={styles.year}>{achievement.year}</Text>
                             <Text style={styles.event}>{achievement.event}</Text>
+                            <Image source={achievement.image} style={styles.image} />
                         </View>
-                        <Image source={achievement.image} style={styles.image} />
-                    </View>
+                    </TouchableOpacity>
                 ))}
             </View>
         </ScrollView>
@@ -52,58 +54,80 @@ const HistoryScreen = () => {
 const styles = StyleSheet.create({
     container: {
         flex: 1,
-        backgroundColor: '#fff',
+        backgroundColor: '#E6F3FA', // Light blue background
     },
     header: {
-        padding: 16,
+        padding: 20,
         alignItems: 'center',
-        marginBottom: 20,
+        backgroundColor: '#D0EAFB',
+        borderBottomLeftRadius: 20,
+        borderBottomRightRadius: 20,
+        marginBottom: 10,
     },
     headerTitle: {
-        fontSize: 24,
+        fontSize: 28,
         fontWeight: 'bold',
-        color: 'black',
+        color: '#02457A',
     },
     headerSubtitle: {
         fontSize: 16,
-        color: 'gray',
+        color: '#555',
         textAlign: 'center',
+        marginTop: 6,
     },
-    achievementsContainer: {
-        paddingHorizontal: 16,
-        paddingBottom: 20,
+    timeline: {
+        paddingHorizontal: 20,
+        paddingVertical: 10,
     },
-    achievementItem: {
+    card: {
         flexDirection: 'row',
-        alignItems: 'center',
+        backgroundColor: '#fff',
+        padding: 15,
+        borderRadius: 12,
         marginVertical: 10,
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.1,
+        shadowRadius: 4,
+        elevation: 3,
     },
-    timelineDot: {
+    leftColumn: {
+        width: 20,
+        alignItems: 'center',
+    },
+    dot: {
         width: 10,
         height: 10,
         borderRadius: 5,
-        backgroundColor: 'black',
-        marginRight: 10,
-        marginTop: 5, // Adjust as needed for vertical alignment with text
+        backgroundColor: '#0077B6',
+        marginTop: 5,
     },
-    textContainer: {
+    verticalLine: {
+        width: 2,
         flex: 1,
+        backgroundColor: '#0077B6',
+        marginTop: 2,
+    },
+    content: {
+        flex: 1,
+        marginLeft: 10,
     },
     year: {
-        fontSize: 18,
+        fontSize: 16,
         fontWeight: 'bold',
-        color: 'black',
+        color: '#0077B6',
+        marginBottom: 4,
     },
     event: {
-        fontSize: 16,
-        color: 'black',
+        fontSize: 15,
+        color: '#333',
+        marginBottom: 8,
     },
     image: {
-        width: 100,  // Adjust size as needed
-        height: 80, // Adjust size as needed
-        borderRadius: 8,
-        marginLeft: 10,
-        resizeMode: 'cover', // Or 'contain', depending on your needs
+        width: '100%',
+        height: 120,
+        borderRadius: 10,
+        resizeMode: 'cover',
     },
 });
 

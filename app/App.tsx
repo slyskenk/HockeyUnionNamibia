@@ -14,6 +14,9 @@ import RegisterTeamScreen from './teams/registerTeam';
 import EditTeamScreen from './teams/editTeam';
 import EditProfileScreen from './profile/editProfile';
 import SettingsScreen from './profile/settingScreen';
+import LiveDetail from './(tabs)/LiveDetailPage';
+import BookmarksScreen from './news/BookmarksScreen';
+
 
 
 
@@ -30,6 +33,8 @@ function Tabs() {
       <Tab.Screen name="Events" component={EventsScreen} />
       <Tab.Screen name="Teams" component={TeamsScreen} />
       <Tab.Screen name="Profile" component={ProfileScreen} />
+      <Tab.Screen name="LiveDetail" component={LiveDetail} />
+
     </Tab.Navigator>
   );
 }
@@ -48,6 +53,9 @@ export default function App() {
         <Stack.Screen name ="editTeam" component={EditTeamScreen}/>
         <Stack.Screen name ="editProfile" component={EditProfileScreen}/>
         <Stack.Screen name="Settings" component={SettingsScreen} />
+         <Stack.Screen name="Settings" component={SettingsScreen} />
+          <Stack.Screen name="LiveDetail" component={LiveDetail}  />
+          <Stack.Screen name="BookMarks" component={BookmarksScreen}  />
 
       </Stack.Navigator>
     </NavigationContainer>

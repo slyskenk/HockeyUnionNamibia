@@ -11,10 +11,20 @@ import {
 } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import * as ImagePicker from 'expo-image-picker';
-import { getStorage, ref, uploadBytes, getDownloadURL } from 'firebase/storage';
+import {
+  getStorage,
+  ref,
+  uploadBytes,
+  getDownloadURL,
+} from 'firebase/storage';
 import { getFirestore, doc, setDoc } from 'firebase/firestore';
-import { getAuth, updateProfile, reload } from 'firebase/auth';
+import {
+  getAuth,
+  updateProfile,
+  reload,
+} from 'firebase/auth';
 import { Ionicons } from '@expo/vector-icons';
+import CustomButton from '../../components/CustomButton'; // ✅ Import custom button
 
 const EditProfileScreen = () => {
   const navigation = useNavigation();
@@ -57,11 +67,10 @@ const EditProfileScreen = () => {
         const fileRef = ref(storage, `avatars/${user.uid}`);
         await uploadBytes(fileRef, blob);
         const downloadURL = await getDownloadURL(fileRef);
-        console.log('✅ Avatar download URL:', downloadURL);
 
         setProfileData((prev) => ({ ...prev, avatar: downloadURL }));
       } catch (error) {
-        console.error('❌ Error uploading image:', error);
+        console.error('Error uploading image:', error);
         Alert.alert('Upload failed', 'Could not upload image.');
       }
     }
@@ -79,26 +88,32 @@ const EditProfileScreen = () => {
         avatar: profileData.avatar,
       });
 
-      // Update Firebase Auth Profile
+      // Update Auth Profile
       await updateProfile(user, {
         displayName: profileData.name,
         photoURL: profileData.avatar,
       });
 
-      // Refresh user object to get updated photoURL
       await reload(user);
 
-      // Update state with new avatar
-      setProfileData((prev) => ({
-        ...prev,
-        avatar: user.photoURL,
-      }));
+      setProfileData((prev) => ({ ...prev, avatar: user.photoURL }));
 
       Alert.alert('Success', 'Profile updated successfully.');
       navigation.goBack();
     } catch (error) {
       Alert.alert('Error', error.message);
     }
+  };
+
+  const confirmSave = () => {
+    Alert.alert(
+      'Save Changes?',
+      'Do you want to save the changes you made to your profile?',
+      [
+        { text: 'Cancel', style: 'cancel' },
+        { text: 'Save', onPress: handleUpdateProfile },
+      ]
+    );
   };
 
   return (
@@ -146,13 +161,13 @@ const EditProfileScreen = () => {
           />
         </View>
 
-        <TouchableOpacity style={styles.button} onPress={handleUpdateProfile}>
-          <Text style={styles.buttonText}>Save Changes</Text>
-        </TouchableOpacity>
+        <CustomButton title="Save Changes" onPress={confirmSave} />
       </View>
     </View>
   );
 };
+
+export default EditProfileScreen;
 
 const styles = StyleSheet.create({
   container: {
@@ -211,19 +226,4 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: '#ddd',
   },
-  button: {
-    backgroundColor: '#007BFF',
-    paddingVertical: 14,
-    borderRadius: 10,
-    marginTop: 20,
-    width: '100%',
-    alignItems: 'center',
-  },
-  buttonText: {
-    color: '#fff',
-    fontSize: 16,
-    fontWeight: '600',
-  },
 });
-
-export default EditProfileScreen;

@@ -1,199 +1,207 @@
-import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, FlatList } from 'react-native';
-import { FontAwesome } from '@expo/vector-icons';
-import { useNavigation } from '@react-navigation/native';
+import React, { useState, useRef } from 'react';
+import {
+  View,
+  Text,
+  StyleSheet,
+  TouchableOpacity,
+  ScrollView,
+  Animated,
+  LayoutAnimation,
+  UIManager,
+  Platform,
+  Image,
+} from 'react-native';
+import CustomButton from '../../components/CustomButton';
 import { router } from 'expo-router';
 
-interface Event {
-    id: string;
-    team1: string;
-    team2: string;
-    date: string;
-    time: string;
-    venue: string;
+const sampleEvent = {
+  title: 'Hockey Match',
+  team1: 'Team 1 Name',
+  team2: 'Team 2 Name',
+  date: 'DD/MM/YYYY',
+  time: '00:00',
+  venue: 'Some Location',
+  team1Logo: 'https://via.placeholder.com/50', // Replace with actual logo URL
+  team2Logo: 'https://via.placeholder.com/50', // Replace with actual logo URL
+};
+
+// Enable LayoutAnimation on Android
+if (Platform.OS === 'android' && UIManager.setLayoutAnimationEnabledExperimental) {
+  UIManager.setLayoutAnimationEnabledExperimental(true);
 }
 
-const EventsScreen = () => {
-    const navigation = useNavigation();
-    const [events, setEvents] = useState<Event[]>([]);
+const EventsScreen = ({ navigation }) => {
+  const [expanded, setExpanded] = useState(false);
+  const animatedHeight = useRef(new Animated.Value(0)).current;
+  const animatedOpacity = useRef(new Animated.Value(0)).current;
 
-    const handleNewEvent = (newEvent: Omit<Event, 'id'>) => {
-        setEvents(prevEvents => [...prevEvents, { id: Date.now().toString(), ...newEvent }]);
-    };
+  const toggleExpand = () => {
+    LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
+    setExpanded((prev) => !prev);
 
-    useEffect(() => {
-        // In a real app, you might load initial events here
-        const initialEvents: Event[] = [
-            { id: 'initial1', team1: 'Initial Team A', team2: 'Initial Team B', date: '19/05/2025', time: '17:00', venue: 'Initial Venue' },
-        ];
-        setEvents(initialEvents);
-    }, []);
+    Animated.timing(animatedHeight, {
+      toValue: expanded ? 0 : 120, // adjust height as needed
+      duration: 300,
+      useNativeDriver: false,
+    }).start();
 
-    const renderItem = ({ item }: { item: Event }) => (
-        <View style={styles.eventItem}>
-            <Text style={styles.eventTitle}>Hockey Match</Text>
-            <View style={styles.teamsContainer}>
-                <View style={styles.teamInfo}>
-                    <Text style={styles.teamLabel}>TEAM 1</Text>
-                    <Text style={styles.teamName}>{item.team1}</Text>
-                </View>
-                <Text style={styles.vsText}>vs</Text>
-                <View style={styles.teamInfo}>
-                    <Text style={styles.teamLabel}>TEAM 2</Text>
-                    <Text style={styles.teamName}>{item.team2}</Text>
-                </View>
+    Animated.timing(animatedOpacity, {
+      toValue: expanded ? 0 : 1,
+      duration: 300,
+      useNativeDriver: false,
+    }).start();
+  };
+
+  return (
+    <ScrollView contentContainerStyle={styles.container}>
+      <TouchableOpacity style={styles.card} onPress={toggleExpand}>
+        <Text style={styles.title}>{sampleEvent.title}</Text>
+
+        {/* Team Row with Logos */}
+        <View style={styles.row}>
+          <View style={styles.teamContainer}>
+            <Image source={{ uri: sampleEvent.team1Logo }} style={styles.teamLogo} />
+            <View>
+              <Text style={styles.label}>TEAM 1</Text>
+              <Text style={styles.value}>{sampleEvent.team1}</Text>
             </View>
-            <View style={styles.detailsContainer}>
-                <View style={styles.detailItem}>
-                    <Text style={styles.detailLabel}>DATE</Text>
-                    <Text style={styles.detailValue}>{item.date}</Text>
-                </View>
-                <View style={styles.detailItem}>
-                    <Text style={styles.detailLabel}>TIME</Text>
-                    <Text style={styles.detailValue}>{item.time}</Text>
-                </View>
-                <View style={styles.detailItem}>
-                    <Text style={styles.detailLabel}>VENUE</Text>
-                    <Text style={styles.detailValue}>{item.venue}</Text>
-                </View>
+          </View>
+          <View style={styles.teamContainer}>
+            <Image source={{ uri: sampleEvent.team2Logo }} style={styles.teamLogo} />
+            <View>
+              <Text style={styles.label}>TEAM 2</Text>
+              <Text style={styles.value}>{sampleEvent.team2}</Text>
             </View>
+          </View>
         </View>
-    );
 
-    return (
-        <View style={styles.container}>
-            {events.length > 0 ? (
-                <FlatList
-                    data={events}
-                    keyExtractor={(item) => item.id}
-                    renderItem={renderItem}
-                    contentContainerStyle={styles.eventsList}
-                />
-            ) : (
-                <View style={styles.content}>
-                    <Text style={styles.noEventsText}>NO EVENTS YET</Text>
-                </View>
-            )}
-
-            <TouchableOpacity
-                style={styles.createButton}
-                onPress={() => router.push('/events/createEvents')}
-            >
-                <Text style={styles.createButtonText}>Create new event</Text>
-            </TouchableOpacity>
-
-            <View style={styles.navigation}>
-                <TouchableOpacity style={styles.navItem}>
-                    <FontAwesome name="newspaper-o" size={24} color="gray" />
-                    <Text style={styles.navText}>News</Text>
-                </TouchableOpacity>
+        <View style={styles.row}>
+          <View>
+            <Text style={styles.label}>DATE</Text>
+            <Text style={styles.value}>{sampleEvent.date}</Text>
+          </View>
+          {expanded && (
+            <View>
+              <Text style={styles.label}>TIME</Text>
+              <Text style={styles.value}>{sampleEvent.time}</Text>
             </View>
+          )}
         </View>
-    );
+
+        {/* Expandable section */}
+        <Animated.View
+          style={[
+            styles.expandSection,
+            {
+              height: animatedHeight,
+              opacity: animatedOpacity,
+            },
+          ]}
+        >
+          <View style={styles.row}>
+            <View style={styles.teamContainer}>
+              <Image source={{ uri: sampleEvent.team1Logo }} style={styles.teamLogo} />
+              <View>
+                <Text style={styles.label}>TEAM 1</Text>
+                <Text style={styles.value}>{sampleEvent.team1}</Text>
+              </View>
+            </View>
+            <View style={styles.teamContainer}>
+              <Image source={{ uri: sampleEvent.team2Logo }} style={styles.teamLogo} />
+              <View>
+                <Text style={styles.label}>TEAM 2</Text>
+                <Text style={styles.value}>{sampleEvent.team2}</Text>
+              </View>
+            </View>
+          </View>
+
+          <View style={styles.row}>
+            <View>
+              <Text style={styles.label}>DATE</Text>
+              <Text style={styles.value}>{sampleEvent.date}</Text>
+            </View>
+            <View>
+              <Text style={styles.label}>VENUE</Text>
+              <Text style={styles.value}>{sampleEvent.venue}</Text>
+            </View>
+          </View>
+
+          <CustomButton
+            title="Edit Event"
+            onPress={() => router.push('/events/createEvents')}
+            style={styles.editButton}
+          />
+        </Animated.View>
+      </TouchableOpacity>
+
+      <CustomButton
+        title="Create new event"
+        onPress={() => router.push('/events/createEvents')}
+        style={styles.bottomButton}
+      />
+    </ScrollView>
+  );
 };
 
 const styles = StyleSheet.create({
-    container: {
-        flex: 1,
-        backgroundColor: '#fff',
-    },
-    content: {
-        flex: 1,
-        justifyContent: 'center',
-        alignItems: 'center',
-    },
-    noEventsText: {
-        fontSize: 18,
-        color: '#888',
-    },
-    eventsList: {
-        padding: 10,
-    },
-    eventItem: {
-        backgroundColor: '#f9f9f9',
-        borderRadius: 8,
-        padding: 15,
-        marginBottom: 10,
-        borderWidth: 1,
-        borderColor: '#eee',
-    },
-    eventTitle: {
-        fontSize: 18,
-        fontWeight: 'bold',
-        marginBottom: 10,
-        color: '#333',
-    },
-    teamsContainer: {
-        flexDirection: 'row',
-        justifyContent: 'space-between',
-        alignItems: 'center',
-        marginBottom: 10,
-    },
-    teamInfo: {
-        alignItems: 'center',
-    },
-    teamLabel: {
-        fontSize: 12,
-        color: '#777',
-        marginBottom: 3,
-    },
-    teamName: {
-        fontSize: 16,
-        fontWeight: 'bold',
-        color: '#333',
-    },
-    vsText: {
-        fontSize: 16,
-        color: '#555',
-        fontWeight: 'bold',
-    },
-    detailsContainer: {
-        flexDirection: 'row',
-        justifyContent: 'space-around',
-    },
-    detailItem: {
-        alignItems: 'center',
-    },
-    detailLabel: {
-        fontSize: 10,
-        color: '#999',
-        marginBottom: 2,
-        textTransform: 'uppercase',
-    },
-    detailValue: {
-        fontSize: 14,
-        color: '#555',
-    },
-    createButton: {
-        backgroundColor: '#0000FF',
-        borderRadius: 5,
-        paddingVertical: 12,
-        paddingHorizontal: 20,
-        marginHorizontal: 20,
-        marginBottom: 20,
-        alignItems: 'center',
-    },
-    createButtonText: {
-        color: '#fff',
-        fontSize: 16,
-        fontWeight: 'bold',
-    },
-    navigation: {
-        flexDirection: 'row',
-        justifyContent: 'space-around',
-        paddingVertical: 15,
-        borderTopWidth: 1,
-        borderTopColor: '#eee',
-        backgroundColor: '#f9f9f9',
-    },
-    navItem: {
-        alignItems: 'center',
-    },
-    navText: {
-        fontSize: 12,
-        color: 'gray',
-        marginTop: 5,
-    },
+  container: {
+    padding: 20,
+    justifyContent: 'space-between',
+  },
+  card: {
+    backgroundColor: '#D6E7FF',
+    borderRadius: 16,
+    padding: 20,
+    marginBottom: 30,
+    borderWidth: 1,
+    borderColor: '#3B82F6',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
+  },
+  title: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#0F172A',
+    marginBottom: 15,
+  },
+  row: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginVertical: 6,
+  },
+  label: {
+    fontSize: 12,
+    color: '#64748B',
+  },
+  value: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#0F172A',
+  },
+  expandSection: {
+    overflow: 'hidden',
+  },
+  bottomButton: {
+    marginTop: 40,
+  },
+  editButton: {
+    marginTop: 16,
+  },
+  teamContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  teamLogo: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    marginRight: 8,
+    backgroundColor: '#CBD5E1',
+  },
 });
 
 export default EventsScreen;

@@ -1,51 +1,62 @@
-import React, { useEffect, useState } from 'react';
-import {
-  View,
-  Text,
-  StyleSheet,
-  TouchableOpacity,
-  ScrollView,
-  TextInput,
-  Image,
-} from 'react-native';
-import { LinearGradient } from 'expo-linear-gradient';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
-import { router } from 'expo-router';
+import { LinearGradient } from 'expo-linear-gradient';
+import { router } from 'expo-router'; // Assuming expo-router is used for navigation
+import React, { useEffect, useState } from 'react';
+import {
+  Image,
+  ImageSourcePropType // Import ImageSourcePropType
+  ,
+
+
+
+
+
+
+
+  ScrollView,
+  StyleSheet,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  View
+} from 'react-native';
 
 // Define the Team type
 interface Team {
   id: string;
   name: string;
   coach: string;
-  logo: string | number;
+  logo: ImageSourcePropType; // Change logo type to ImageSourcePropType
 }
 
-// Dummy data
+// Dummy data for local teams with local image imports
+// IMPORTANT: Replace these paths with your actual local image paths.
+// For example: require('../../assets/images/saints.png')
 const localTeamsData: Team[] = [
   {
     id: 'indoor-men-saints',
-    name: 'Indoor Men Saints',
+    name: 'Saints',
     coach: 'Johan Weyhe',
-    logo: 'https://via.placeholder.com/50',
+    logo: require('../../assets/images/find_a_club/wanderers.png'), // Placeholder for Saints logo
   },
   {
     id: 'indoor-men-wanderers',
-    name: 'Indoor Men Wanderers',
+    name: 'Wanderers',
     coach: 'Melissa Gillies',
-    logo: 'https://via.placeholder.com/50',
+    logo: require('../../assets/images/find_a_club/wanderers.png'), // Placeholder for Wanderers logo
   },
   {
     id: 'indoor-women-saints',
-    name: 'Indoor Women Saints',
+    name: 'Saints Womens Team',
     coach: 'Johan Weyhe',
-    logo: 'https://via.placeholder.com/50',
+    logo: require('../../assets/images/find_a_club/wanderers.png'), // Placeholder for Saints logo
   },
   {
     id: 'indoor-women-wanderers',
-    name: 'Indoor Women Wanderers',
+    name: 'Wanderers Womens National Team',
     coach: 'Melissa Gillies',
-    logo: 'https://via.placeholder.com/50',
+    logo: require('../../assets/images/find_a_club/wanderers.png'), // Placeholder for Wanderers logo
   },
 ];
 
@@ -56,9 +67,11 @@ const TeamsScreen = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
+  // Simulate fetching data, in a real app this would be an API call
   useEffect(() => {
     const fetchData = async () => {
       try {
+        // Simulate network delay
         setTimeout(() => {
           setTeams(localTeamsData);
           setLoading(false);
@@ -74,13 +87,20 @@ const TeamsScreen = () => {
 
   const handleSearch = (query: string) => {
     setSearchQuery(query);
+    // Filter teams based on the search query
     const filteredTeams = localTeamsData.filter((team) =>
       team.name.toLowerCase().includes(query.toLowerCase())
     );
     setTeams(filteredTeams);
   };
 
+  const goToRegisterClub = () => {
+    // Navigate to the RegisterTeamScreen (assuming the route is '/teams/registerTeam')
+    router.push('/teams/registerTeam');
+  };
+
   const goToEditClub = (teamId: string) => {
+    // Navigate to the EditTeamScreen and pass the teamId as a parameter
     router.push({ pathname: '/teams/editTeam', params: { teamId } });
   };
 
@@ -105,13 +125,14 @@ const TeamsScreen = () => {
 
   return (
     <ScrollView style={styles.container}>
-      {/* Header */}
+      {/* Header Section */}
       <View style={styles.header}>
         <Text style={styles.headerTitle}>Local Teams</Text>
       </View>
 
-      {/* Search */}
+      {/* Search Bar Section */}
       <View style={styles.searchContainer}>
+        <MaterialCommunityIcons name="magnify" size={24} color="#888" />
         <TextInput
           style={styles.searchInput}
           placeholder="Search"
@@ -121,10 +142,10 @@ const TeamsScreen = () => {
         <MaterialCommunityIcons name="microphone-outline" size={24} color="#888" />
       </View>
 
-      {/* Indoor Men */}
+      {/* Indoor Men Premier Section */}
       <Text style={styles.sectionTitle}>Indoor Men Premier</Text>
       {teams
-        .filter((team) => team.name.toLowerCase().includes('indoor men'))
+        .filter((team) => team.name.toLowerCase().includes('saints') || team.name.toLowerCase().includes('wanderers')) // Filter for men's teams
         .map((team) => (
           <TouchableOpacity
             key={team.id}
@@ -132,7 +153,7 @@ const TeamsScreen = () => {
             onPress={() => goToEditClub(team.id)}
           >
             <View style={styles.teamInfo}>
-              <Image source={{ uri: team.logo as string }} style={styles.teamLogo} />
+              <Image source={team.logo} style={styles.teamLogo} />
               <View>
                 <Text style={styles.teamName}>{team.name}</Text>
                 <Text style={styles.coach}>Current Coach: {team.coach}</Text>
@@ -141,10 +162,10 @@ const TeamsScreen = () => {
           </TouchableOpacity>
         ))}
 
-      {/* Indoor Women */}
+      {/* Indoor Women Premier Section */}
       <Text style={styles.sectionTitle}>Indoor Women Premier</Text>
       {teams
-        .filter((team) => team.name.toLowerCase().includes('indoor women'))
+        .filter((team) => team.name.toLowerCase().includes('womens')) // Filter for women's teams
         .map((team) => (
           <TouchableOpacity
             key={team.id}
@@ -152,7 +173,7 @@ const TeamsScreen = () => {
             onPress={() => goToEditClub(team.id)}
           >
             <View style={styles.teamInfo}>
-              <Image source={{ uri: team.logo as string }} style={styles.teamLogo} />
+              <Image source={team.logo} style={styles.teamLogo} />
               <View>
                 <Text style={styles.teamName}>{team.name}</Text>
                 <Text style={styles.coach}>Current Coach: {team.coach}</Text>
@@ -161,11 +182,11 @@ const TeamsScreen = () => {
           </TouchableOpacity>
         ))}
 
-      {/* Buttons */}
+      {/* Action Buttons Section */}
       <View style={styles.buttonContainer}>
         <TouchableOpacity
           style={styles.registerButton}
-          onPress={() => router.push('/teams/registerTeam')}
+          onPress={goToRegisterClub}
         >
           <LinearGradient colors={['#4a148c', '#1a237e']} style={styles.gradient}>
             <Text style={styles.buttonText}>Register a club</Text>
@@ -174,7 +195,7 @@ const TeamsScreen = () => {
 
         <TouchableOpacity
           style={styles.editButton}
-          onPress={() => router.push('/teams/editTeam')}
+          onPress={() => router.push('/teams/editTeam')} // Assuming a generic edit route
         >
           <LinearGradient colors={['#007BFF', '#0040FF']} style={styles.gradient}>
             <Text style={styles.buttonText}>Edit a club</Text>
@@ -197,10 +218,11 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     marginHorizontal: 16,
     marginBottom: 20,
+    height: 48, // Fixed height for consistency
   },
   searchInput: {
     flex: 1,
-    height: 40,
+    height: '100%', // Take full height of container
     paddingHorizontal: 10,
     fontSize: 16,
     color: '#333',
@@ -222,7 +244,7 @@ const styles = StyleSheet.create({
   teamLogo: {
     width: 50,
     height: 50,
-    borderRadius: 25,
+    borderRadius: 25, // Makes the logo circular
     marginRight: 16,
   },
   teamName: { fontSize: 18, fontWeight: 'bold', color: 'black' },
@@ -237,13 +259,13 @@ const styles = StyleSheet.create({
     flex: 1,
     marginRight: 8,
     borderRadius: 8,
-    overflow: 'hidden',
+    overflow: 'hidden', // Ensures gradient respects border radius
   },
   editButton: {
     flex: 1,
     marginLeft: 8,
     borderRadius: 8,
-    overflow: 'hidden',
+    overflow: 'hidden', // Ensures gradient respects border radius
   },
   gradient: {
     padding: 12,

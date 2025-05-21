@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, FlatList } from 'react-native';
 import { FontAwesome } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
+import { router } from 'expo-router';
 
 interface Event {
     id: string;
@@ -76,7 +77,7 @@ const EventsScreen = () => {
 
             <TouchableOpacity
                 style={styles.createButton}
-                onPress={() => navigation.navigate('createEvents', { onEventCreated: handleNewEvent })}
+                onPress={() => router.push('/events/createEvents')}
             >
                 <Text style={styles.createButtonText}>Create new event</Text>
             </TouchableOpacity>

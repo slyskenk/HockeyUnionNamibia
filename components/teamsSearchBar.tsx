@@ -3,13 +3,13 @@ import { MaterialIcons as Icon } from '@expo/vector-icons';
 import { router } from 'expo-router';
 import React, { useRef, useState } from 'react';
 import {
-  Animated,
-  Image,
-  Platform,
-  StyleSheet,
-  TextInput,
-  TouchableOpacity,
-  View,
+    Animated,
+    Image,
+    Platform,
+    StyleSheet,
+    TextInput,
+    TouchableOpacity,
+    View,
 } from 'react-native';
 
 type Props = {
@@ -67,7 +67,7 @@ const SearchBar: React.FC<Props> = ({ query, onChangeText, profilePic }) => {
                 <Icon name="search" size={22} color="#666" />
                 <TextInput
                     style={styles.searchInput}
-                    placeholder="Search for news..."
+                    placeholder="Search for teams..."
                     placeholderTextColor="#aaa"
                     value={query}
                     onChangeText={onChangeText}

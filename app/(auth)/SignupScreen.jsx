@@ -36,7 +36,7 @@ export default function SignupScreen() {
       const user = userCredential.user;
       setLoading(false);
       Alert.alert('Success', `Account created for ${user.email}`);
-      router.push('HomeScreen');
+      router.push('/news');
     } catch (error) {
       setLoading(false);
       let message = 'Signup failed. Please try again.';

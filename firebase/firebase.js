@@ -3,6 +3,7 @@ import { getAuth } from "firebase/auth";
 import { getStorage } from 'firebase/storage';
 import { getFirestore } from 'firebase/firestore';
 
+
 const firebaseConfig = {
   apiKey: "AIzaSyA-Z-7mzFScX-BTDD85ShkGGL6iavxeIOE",
   authDomain: "hockey-union.firebaseapp.com",
@@ -16,5 +17,6 @@ const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 const storage = getStorage(app);
 const auth = getAuth(app);
+
 
 export { app, auth, db, storage };

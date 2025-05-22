@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useState } from 'react';
 import {
   View,
   Text,
@@ -10,7 +10,7 @@ import {
   Alert,
   Animated,
 } from 'react-native';
-import { useNavigation } from '@react-navigation/native';
+import { useNavigation, useFocusEffect } from '@react-navigation/native';
 import { getAuth } from 'firebase/auth';
 import { Ionicons, MaterialIcons } from '@expo/vector-icons';
 import { router } from 'expo-router';
@@ -32,33 +32,37 @@ const ProfileScreen = () => {
   const [scaleEdit] = useState(new Animated.Value(1));
   const [scaleLogout] = useState(new Animated.Value(1));
 
-  useEffect(() => {
-    const fetchUserData = async () => {
-      if (user) {
-        try {
-          const docRef = doc(firestore, 'users', user.uid);
-          const docSnap = await getDoc(docRef);
+  // Fetch user data from Firestore whenever screen is focused
+  useFocusEffect(
+    React.useCallback(() => {
+      const fetchUserData = async () => {
+        if (user) {
+          try {
+            const docRef = doc(firestore, 'users', user.uid); // Only fetch your own document
+            const docSnap = await getDoc(docRef);
 
-          if (docSnap.exists()) {
-            const data = docSnap.data();
-            setProfileData({
-              name: data.name || user.displayName || 'John Doe',
-              email: data.email || user.email || 'john.doe@example.com',
-              phone: data.phone || '+1 498 788 9999',
-              avatar: data.avatar || null,
-            });
-          } else {
-            console.log('No user document found!');
+            if (docSnap.exists()) {
+              const data = docSnap.data();
+              setProfileData({
+                name: data.name || user.displayName || 'John Doe',
+                email: data.email || user.email || 'john.doe@example.com',
+                phone: data.phone || '+1 498 788 9999',
+                avatar: data.avatar || null,
+              });
+            } else {
+              console.log('No user document found!');
+            }
+          } catch (error) {
+            console.error('Error fetching user data:', error);
           }
-        } catch (error) {
-          console.error('Error fetching user data:', error);
         }
-      }
-    };
+      };
 
-    fetchUserData();
-  }, []);
+      fetchUserData();
+    }, [user])
+  );
 
+  // Handle logout with confirmation
   const handleLogout = () => {
     Alert.alert('Confirm Logout', 'Are you sure you want to log out?', [
       { text: 'Cancel', style: 'cancel' },
@@ -73,6 +77,7 @@ const ProfileScreen = () => {
     ]);
   };
 
+  // Animate button press
   const animateButton = (button: Animated.Value, callback: () => void) => {
     Animated.sequence([
       Animated.timing(button, {

@@ -30,13 +30,22 @@ export default function SignupScreen() {
       return;
     }
 
+    
+
     setLoading(true);
+
+
+
     try {
       const userCredential = await createUserWithEmailAndPassword(auth, email, password);
       const user = userCredential.user;
       setLoading(false);
       Alert.alert('Success', `Account created for ${user.email}`);
       router.push('/news');
+
+
+
+
     } catch (error) {
       setLoading(false);
       let message = 'Signup failed. Please try again.';

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View,
   Text,
@@ -8,6 +8,7 @@ import {
   Image,
   Alert,
   Platform,
+  ActivityIndicator,
 } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import * as ImagePicker from 'expo-image-picker';
@@ -17,29 +18,81 @@ import {
   uploadBytes,
   getDownloadURL,
 } from 'firebase/storage';
-import { getFirestore, doc, setDoc } from 'firebase/firestore';
+import {
+  getFirestore,
+  doc,
+  setDoc,
+  onSnapshot,
+} from 'firebase/firestore';
 import {
   getAuth,
   updateProfile,
   reload,
 } from 'firebase/auth';
 import { Ionicons } from '@expo/vector-icons';
-import CustomButton from '../../components/CustomButton'; // ✅ Import custom button
+import CustomButton from '../../components/CustomButton';
+
+const uploadImageAsync = async (uri, path) => {
+  try {
+    const blob = await new Promise((resolve, reject) => {
+      const xhr = new XMLHttpRequest();
+      xhr.onload = () => resolve(xhr.response);
+      xhr.onerror = (e) => {
+        console.log('XHR error', e);
+        reject(new TypeError('Network request failed'));
+      };
+      xhr.responseType = 'blob';
+      xhr.open('GET', uri, true);
+      xhr.send(null);
+    });
+
+    const storage = getStorage();
+    const fileRef = ref(storage, path);
+    await uploadBytes(fileRef, blob);
+
+    blob.close?.(); // Optional cleanup
+
+    const downloadURL = await getDownloadURL(fileRef);
+    return downloadURL;
+  } catch (error) {
+    console.error('Upload failed:', error.code, error.message,errorserverResponse);
+    throw error;
+  }
+};
 
 const EditProfileScreen = () => {
   const navigation = useNavigation();
   const auth = getAuth();
   const user = auth.currentUser;
   const db = getFirestore();
-  const storage = getStorage();
 
   const [profileData, setProfileData] = useState({
-    name: user?.displayName || 'John Doe',
-    email: user?.email || '',
-    phone: '+1 498 788 9999',
-    password: '',
-    avatar: user?.photoURL || 'https://via.placeholder.com/150',
+    name: '',
+    email: '',
+    phone: '',
+    avatar: 'https://via.placeholder.com/150',
   });
+
+  const [loading, setLoading] = useState(false); // For profile update
+  const [uploading, setUploading] = useState(false); // For image upload
+
+  useEffect(() => {
+    if (!user) return;
+
+    const unsubscribe = onSnapshot(doc(db, 'users', user.uid), (docSnapshot) => {
+      if (docSnapshot.exists()) {
+        const userData = docSnapshot.data();
+        setProfileData({
+          name: userData.name || '',
+          email: userData.email || '',
+          phone: userData.phone || '',
+          avatar: userData.avatar || 'https://via.placeholder.com/150',
+        });
+      }
+    });
+
+    return () => unsubscribe();
+  }, [user]);
 
   const handleInputChange = (field, value) => {
     setProfileData((prev) => ({ ...prev, [field]: value }));
@@ -59,28 +112,28 @@ const EditProfileScreen = () => {
     });
 
     if (!pickerResult.canceled && pickerResult.assets.length > 0) {
+      const image = pickerResult.assets[0];
+      const imageUri = image.uri;
+      const imageName = imageUri.substring(imageUri.lastIndexOf('/') + 1);
+      const storagePath = `avatars/${user.uid}_${Date.now()}_${imageName}`;
+
+      setUploading(true);
       try {
-        const image = pickerResult.assets[0];
-        const response = await fetch(image.uri);
-        const blob = await response.blob();
-
-        const fileRef = ref(storage, `avatars/${user.uid}`);
-        await uploadBytes(fileRef, blob);
-        const downloadURL = await getDownloadURL(fileRef);
-
+        const downloadURL = await uploadImageAsync(imageUri, storagePath);
         setProfileData((prev) => ({ ...prev, avatar: downloadURL }));
       } catch (error) {
-        console.error('Error uploading image:', error);
         Alert.alert('Upload failed', 'Could not upload image.');
+      } finally {
+        setUploading(false);
       }
     }
   };
 
   const handleUpdateProfile = async () => {
-    try {
-      if (!user) return;
+    if (!user) return;
 
-      // Update Firestore
+    setLoading(true);
+    try {
       await setDoc(doc(db, 'users', user.uid), {
         name: profileData.name,
         email: profileData.email,
@@ -88,20 +141,18 @@ const EditProfileScreen = () => {
         avatar: profileData.avatar,
       });
 
-      // Update Auth Profile
       await updateProfile(user, {
         displayName: profileData.name,
         photoURL: profileData.avatar,
       });
 
       await reload(user);
-
-      setProfileData((prev) => ({ ...prev, avatar: user.photoURL }));
-
       Alert.alert('Success', 'Profile updated successfully.');
       navigation.goBack();
     } catch (error) {
       Alert.alert('Error', error.message);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -128,9 +179,13 @@ const EditProfileScreen = () => {
 
       <View style={styles.profileSection}>
         <Image source={{ uri: profileData.avatar }} style={styles.avatar} />
-        <TouchableOpacity onPress={handleChangePicture}>
-          <Text style={styles.changePicture}>Change Profile Picture</Text>
-        </TouchableOpacity>
+        {uploading ? (
+          <ActivityIndicator size="small" color="#007BFF" style={{ marginBottom: 20 }} />
+        ) : (
+          <TouchableOpacity onPress={handleChangePicture}>
+            <Text style={styles.changePicture}>Change Profile Picture</Text>
+          </TouchableOpacity>
+        )}
 
         <View style={styles.inputGroup}>
           <Text style={styles.label}>Full Name</Text>
@@ -161,7 +216,11 @@ const EditProfileScreen = () => {
           />
         </View>
 
-        <CustomButton title="Save Changes" onPress={confirmSave} />
+        {loading ? (
+          <ActivityIndicator size="large" color="#007BFF" style={{ marginTop: 20 }} />
+        ) : (
+          <CustomButton title="Save Changes" onPress={confirmSave} />
+        )}
       </View>
     </View>
   );

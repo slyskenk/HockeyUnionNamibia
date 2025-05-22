@@ -1,188 +1,163 @@
-import { useNavigation } from '@react-navigation/native';
-import { Button, ButtonGroup, Input, Text } from '@rneui/themed';
-import { getAuth, signOut, updateEmail, updatePassword } from 'firebase/auth';
-import { doc, getDoc, updateDoc } from 'firebase/firestore';
-import storage from '@react-native-firebase/storage';
-import { launchImageLibrary } from 'react-native-image-picker';
 import React, { useEffect, useState } from 'react';
-import { Alert, ScrollView, StyleSheet, Image, View } from 'react-native';
-import { db } from '../firebase/firebase';
+import { View, Text, TextInput, Button, Alert, TouchableOpacity } from 'react-native';
+import { getAuth, updateEmail, updatePassword } from 'firebase/auth';
+import { doc, getDoc, updateDoc } from 'firebase/firestore';
+import { useNavigation } from '@react-navigation/native';
+import { db } from '../firebaseConfig';
 
-export default function Settings() {
+const Settings = () => {
   const auth = getAuth();
   const user = auth.currentUser;
   const navigation = useNavigation();
 
-  const [roleIndex, setRoleIndex] = useState(0);
   const [email, setEmail] = useState('');
-  const [role, setRole] = useState('');
   const [newEmail, setNewEmail] = useState('');
   const [newPassword, setNewPassword] = useState('');
-  const [loading, setLoading] = useState(false);
-  const [avatarUrl, setAvatarUrl] = useState(user?.photoURL || null);
-
-  const roles = ['Fan', 'Supporter'];
+  const [role, setRole] = useState('');
+  const [selectedRole, setSelectedRole] = useState('');
 
   useEffect(() => {
     if (user) {
       setEmail(user.email);
-      setAvatarUrl(user.photoURL);
-      loadUserData();
+      fetchUserRole();
     }
-  }, []);
+  }, [user]);
 
-  async function loadUserData() {
+  const fetchUserRole = async () => {
     try {
       const docRef = doc(db, 'users', user.uid);
       const docSnap = await getDoc(docRef);
       if (docSnap.exists()) {
-        const userData = docSnap.data();
-        setRole(userData.role);
-        const index = roles.indexOf(userData.role);
-        if (index !== -1) setRoleIndex(index);
+        setRole(docSnap.data().role);
+        setSelectedRole(docSnap.data().role);
+      } else {
+        Alert.alert('Error', 'No such user document!');
       }
     } catch (error) {
-      Alert.alert('Error fetching user data', error.message);
+      Alert.alert('Error', error.message);
     }
-  }
+  };
 
-  async function updateUserRole() {
+  const handleUpdateEmail = async () => {
+    if (!user) {
+      Alert.alert('Update Error', 'No user is signed in.');
+      return;
+    }
+
     try {
-      setLoading(true);
-      const selectedRole = roles[roleIndex];
-      await updateDoc(doc(db, 'users', user.uid), { role: selectedRole });
-      setRole(selectedRole);
-      Alert.alert('Success', `Role updated to ${selectedRole}`);
+      await updateEmail(user, newEmail);
+      Alert.alert('Success', 'Email updated.');
+      setEmail(newEmail);
     } catch (error) {
       Alert.alert('Update Error', error.message);
-    } finally {
-      setLoading(false);
     }
-  }
+  };
 
-  async function handleUpdateEmail() {
-    try {
-      setLoading(true);
-      await updateEmail(user, newEmail);
-      setEmail(newEmail);
-      Alert.alert('Success', 'Email updated!');
-    } catch (error) {
-      Alert.alert('Email Update Error', error.message);
-    } finally {
-      setLoading(false);
+  const handleUpdatePassword = async () => {
+    if (!user) {
+      Alert.alert('Password Update Error', 'No user is signed in.');
+      return;
     }
-  }
 
-  async function handleUpdatePassword() {
     try {
-      setLoading(true);
       await updatePassword(user, newPassword);
-      Alert.alert('Success', 'Password updated!');
+      Alert.alert('Success', 'Password updated.');
+      setNewPassword('');
     } catch (error) {
       Alert.alert('Password Update Error', error.message);
-    } finally {
-      setLoading(false);
     }
-  }
+  };
 
-  async function uploadAvatar() {
+  const handleUpdateRole = async () => {
+    if (!user) {
+      Alert.alert('Update Error', 'No user is signed in.');
+      return;
+    }
+
     try {
-      const result = await launchImageLibrary({ mediaType: 'photo' });
-      if (result.didCancel || !result.assets?.length) return;
-
-      const imageUri = result.assets[0].uri;
-      const userId = user.uid;
-
-      const reference = storage().ref(`avatars/${userId}`);
-      await reference.putFile(imageUri);
-
-      const downloadURL = await reference.getDownloadURL();
-      await user.updateProfile({ photoURL: downloadURL });
-      setAvatarUrl(downloadURL);
-
-      Alert.alert('Success', 'Profile picture updated!');
+      const docRef = doc(db, 'users', user.uid);
+      await updateDoc(docRef, { role: selectedRole });
+      Alert.alert('Success', 'Role updated.');
+      setRole(selectedRole);
     } catch (error) {
-      Alert.alert('Upload Error', error.message);
+      Alert.alert('Update Error', error.message);
     }
-  }
+  };
 
-  function handleSignOut() {
-    signOut(auth)
-      .then(() => {
-        Alert.alert('Signed out successfully!');
-        navigation.reset({
-          index: 0,
-          routes: [{ name: 'Login' }],
-        });
-      })
-      .catch((error) => {
-        Alert.alert('Sign Out Error', error.message);
-      });
-  }
+  const handleSignOut = () => {
+    auth.signOut();
+  };
 
   return (
-    <ScrollView contentContainerStyle={styles.container}>
-      <Text h4 style={styles.heading}>Settings</Text>
+    <View style={{ padding: 20 }}>
+      {/* Back Button */}
+      <TouchableOpacity
+        onPress={() => navigation.goBack()}
+        style={{
+          marginBottom: 10,
+          padding: 10,
+          backgroundColor: '#ccc',
+          alignSelf: 'flex-start',
+          borderRadius: 5,
+        }}
+      >
+        <Text style={{ fontWeight: 'bold' }}>← Back</Text>
+      </TouchableOpacity>
 
-      <View style={{ alignItems: 'center', marginBottom: 20 }}>
-        {avatarUrl ? (
-          <Image
-            source={{ uri: avatarUrl }}
-            style={{ width: 100, height: 100, borderRadius: 50, marginBottom: 10 }}
-          />
-        ) : (
-          <Text>No profile picture</Text>
-        )}
-        <Button title="Change Profile Picture" onPress={uploadAvatar} />
+      <Text style={{ fontSize: 24, marginBottom: 10 }}>Settings</Text>
+      <Text>Email: {email}</Text>
+
+      <Text style={{ marginTop: 10 }}>Current Role: {role}</Text>
+      <Text>Change Role:</Text>
+      <View style={{ flexDirection: 'row', marginBottom: 10 }}>
+        <TouchableOpacity
+          style={{
+            backgroundColor: selectedRole === 'Fan' ? 'blue' : 'lightgray',
+            padding: 10,
+            marginRight: 10,
+          }}
+          onPress={() => setSelectedRole('Fan')}
+        >
+          <Text style={{ color: 'white' }}>Fan</Text>
+        </TouchableOpacity>
+
+        <TouchableOpacity
+          style={{
+            backgroundColor: selectedRole === 'Supporter' ? 'blue' : 'lightgray',
+            padding: 10,
+          }}
+          onPress={() => setSelectedRole('Supporter')}
+        >
+          <Text style={{ color: 'white' }}>Supporter</Text>
+        </TouchableOpacity>
       </View>
 
-      <Text style={styles.label}>Email: {email}</Text>
-      <Text style={styles.label}>Current Role: {role}</Text>
+      <Button title="Update Role" onPress={handleUpdateRole} />
 
-      <Text style={[styles.label, { marginTop: 20 }]}>Change Role:</Text>
-      <ButtonGroup
-        buttons={roles}
-        selectedIndex={roleIndex}
-        onPress={setRoleIndex}
-        containerStyle={{ marginBottom: 20 }}
-      />
-      <Button title="Update Role" disabled={loading} onPress={updateUserRole} />
-
-      <Input
-        label="New Email"
-        placeholder="Enter new email"
+      <Text style={{ marginTop: 20 }}>New Email</Text>
+      <TextInput
         value={newEmail}
         onChangeText={setNewEmail}
-        autoCapitalize="none"
+        placeholder="Enter new email"
+        style={{ borderBottomWidth: 1, marginBottom: 10 }}
       />
-      <Button title="Update Email" disabled={loading || !newEmail} onPress={handleUpdateEmail} />
+      <Button title="Update Email" onPress={handleUpdateEmail} />
 
-      <Input
-        label="New Password"
-        placeholder="Enter new password"
+      <Text style={{ marginTop: 20 }}>New Password</Text>
+      <TextInput
         value={newPassword}
         onChangeText={setNewPassword}
+        placeholder="Enter new password"
         secureTextEntry
+        style={{ borderBottomWidth: 1, marginBottom: 10 }}
       />
-      <Button title="Update Password" disabled={loading || !newPassword} onPress={handleUpdatePassword} />
+      <Button title="Update Password" onPress={handleUpdatePassword} />
 
-      <Button title="Sign Out" onPress={handleSignOut} buttonStyle={{ marginTop: 20 }} type="outline" />
-    </ScrollView>
+      <View style={{ marginTop: 20 }}>
+        <Button title="Sign Out" color="gray" onPress={handleSignOut} />
+      </View>
+    </View>
   );
-}
+};
 
-const styles = StyleSheet.create({
-  container: {
-    padding: 16,
-    marginTop: 40,
-    alignItems: 'stretch',
-  },
-  heading: {
-    marginBottom: 20,
-    textAlign: 'center',
-  },
-  label: {
-    fontSize: 16,
-    marginBottom: 10,
-  },
-});
+export default Settings;

@@ -1,57 +1,56 @@
-import React, { useEffect, useState } from 'react';
-import { View, ScrollView, StyleSheet, Alert, ActivityIndicator } from 'react-native';
-import { Button, ButtonGroup, Input, Text } from '@rneui/themed';
 import { useNavigation } from '@react-navigation/native';
-import { getAuth, onAuthStateChanged, signOut, updateEmail, updatePassword } from 'firebase/auth';
+import { Button, ButtonGroup, Input, Text } from '@rneui/themed';
+import { auth, db, storage } from '../firebase/firebase';
+import { signOut, updateEmail, updatePassword } from 'firebase/auth';
 import { doc, getDoc, updateDoc } from 'firebase/firestore';
-import { db } from '../firebase/firebase'; // your firebase config file
+import { getDownloadURL, ref, uploadBytes } from 'firebase/storage';
+import * as ImagePicker from 'expo-image-picker';
+import React, { useEffect, useState } from 'react';
+import { Alert, Image, ScrollView, StyleSheet, TouchableOpacity, View } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
 
 export default function Settings() {
   const navigation = useNavigation();
-  const auth = getAuth();
+  const user = auth.currentUser;
 
-  const [user, setUser] = useState(null);
+  const [roleIndex, setRoleIndex] = useState(0);
   const [email, setEmail] = useState('');
   const [role, setRole] = useState('');
   const [newEmail, setNewEmail] = useState('');
   const [newPassword, setNewPassword] = useState('');
-  const [roleIndex, setRoleIndex] = useState(0);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
+  const [imageUrl, setImageUrl] = useState(null);
+
   const roles = ['Fan', 'Supporter'];
 
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, async (authUser) => {
-      if (authUser) {
-        setUser(authUser);
-        setEmail(authUser.email);
-
-        try {
-          const userDocRef = doc(db, 'users', authUser.uid);
-          const userDocSnap = await getDoc(userDocRef);
-
-          if (userDocSnap.exists()) {
-            const data = userDocSnap.data();
-            setRole(data.role);
-            const index = roles.indexOf(data.role);
-            if (index !== -1) setRoleIndex(index);
-          }
-        } catch (error) {
-          Alert.alert('Error loading user data', error.message);
-        } finally {
-          setLoading(false);
-        }
-      } else {
-        Alert.alert('Authentication Error', 'No user signed in.');
-        navigation.replace('Login'); // redirect to login
-      }
-    });
-
-    return unsubscribe;
+    if (user) {
+      setEmail(user.email);
+      loadUserData();
+    } else {
+      Alert.alert("Error", "No authenticated user found");
+    }
   }, []);
 
-  const updateUserRole = async () => {
-    if (!user) return;
+  async function loadUserData() {
+    try {
+      const docRef = doc(db, 'users', user.uid);
+      const docSnap = await getDoc(docRef);
+      if (docSnap.exists()) {
+        const userData = docSnap.data();
+        setRole(userData.role);
+        setImageUrl(userData.photoURL);
+        const index = roles.indexOf(userData.role);
+        if (index !== -1) setRoleIndex(index);
+      } else {
+        Alert.alert('Error', 'User data not found in Firestore');
+      }
+    } catch (error) {
+      Alert.alert('Error loading user data', error.message);
+    }
+  }
 
+  async function updateUserRole() {
     try {
       setLoading(true);
       const selectedRole = roles[roleIndex];
@@ -63,11 +62,11 @@ export default function Settings() {
     } finally {
       setLoading(false);
     }
-  };
+  }
 
-  const handleUpdateEmail = async () => {
+  async function handleUpdateEmail() {
     if (!newEmail) {
-      Alert.alert('Input Error', 'Please enter a new email.');
+      Alert.alert("Error", "Please enter a new email");
       return;
     }
 
@@ -76,63 +75,82 @@ export default function Settings() {
       await updateEmail(user, newEmail);
       await updateDoc(doc(db, 'users', user.uid), { email: newEmail });
       setEmail(newEmail);
-      setNewEmail('');
-      Alert.alert('Success', 'Email updated successfully.');
+      Alert.alert('Success', 'Email updated!');
     } catch (error) {
       Alert.alert('Email Update Error', error.message);
     } finally {
       setLoading(false);
     }
-  };
+  }
 
-  const handleUpdatePassword = async () => {
+  async function handleUpdatePassword() {
     if (!newPassword) {
-      Alert.alert('Input Error', 'Please enter a new password.');
+      Alert.alert("Error", "Please enter a new password");
       return;
     }
 
     try {
       setLoading(true);
       await updatePassword(user, newPassword);
-      setNewPassword('');
-      Alert.alert('Success', 'Password updated successfully.');
+      Alert.alert('Success', 'Password updated!');
     } catch (error) {
       Alert.alert('Password Update Error', error.message);
     } finally {
       setLoading(false);
     }
-  };
+  }
 
-  const handleSignOut = () => {
+  async function handleImagePick() {
+    const result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ImagePicker.MediaTypeOptions.Images,
+      allowsEditing: true,
+      aspect: [1, 1],
+      quality: 0.7,
+    });
+
+    if (!result.canceled) {
+      const response = await fetch(result.assets[0].uri);
+      const blob = await response.blob();
+      const imageRef = ref(storage, `avatars/${user.uid}`);
+      await uploadBytes(imageRef, blob);
+      const url = await getDownloadURL(imageRef);
+      setImageUrl(url);
+      await updateDoc(doc(db, 'users', user.uid), { photoURL: url });
+      Alert.alert('Success', 'Profile picture updated!');
+    }
+  }
+
+  function handleSignOut() {
     signOut(auth)
       .then(() => {
+        Alert.alert('Signed out successfully!');
         navigation.reset({ index: 0, routes: [{ name: 'Login' }] });
       })
       .catch((error) => {
         Alert.alert('Sign Out Error', error.message);
       });
-  };
-
-  const handleGoBack = () => {
-    navigation.goBack();
-  };
-
-  if (loading) {
-    return (
-      <View style={styles.loaderContainer}>
-        <ActivityIndicator size="large" color="#007bff" />
-      </View>
-    );
   }
 
   return (
     <ScrollView contentContainerStyle={styles.container}>
+      <TouchableOpacity style={styles.backButton} onPress={() => navigation.goBack()}>
+        <Ionicons name="arrow-back" size={24} color="black" />
+      </TouchableOpacity>
+
       <Text h4 style={styles.heading}>Settings</Text>
 
-      <Button title="Back" onPress={handleGoBack} type="outline" />
+      <View style={{ alignItems: 'center', marginBottom: 20 }}>
+        <TouchableOpacity onPress={handleImagePick}>
+          {imageUrl ? (
+            <Image source={{ uri: imageUrl }} style={styles.avatar} />
+          ) : (
+            <Text>Tap to upload profile picture</Text>
+          )}
+        </TouchableOpacity>
+      </View>
 
-      <Text style={styles.label}>Email: {email || 'Not available'}</Text>
-      <Text style={styles.label}>Current Role: {role || 'Not set'}</Text>
+      <Text style={styles.label}>Email: {email || 'Not found'}</Text>
+      <Text style={styles.label}>Current Role: {role || 'Unknown'}</Text>
 
       <Text style={[styles.label, { marginTop: 20 }]}>Change Role:</Text>
       <ButtonGroup
@@ -150,7 +168,7 @@ export default function Settings() {
         onChangeText={setNewEmail}
         autoCapitalize="none"
       />
-      <Button title="Update Email" onPress={handleUpdateEmail} disabled={loading} />
+      <Button title="Update Email" disabled={loading || !newEmail} onPress={handleUpdateEmail} />
 
       <Input
         label="New Password"
@@ -159,7 +177,7 @@ export default function Settings() {
         onChangeText={setNewPassword}
         secureTextEntry
       />
-      <Button title="Update Password" onPress={handleUpdatePassword} disabled={loading} />
+      <Button title="Update Password" disabled={loading || !newPassword} onPress={handleUpdatePassword} />
 
       <Button title="Sign Out" onPress={handleSignOut} buttonStyle={{ marginTop: 20 }} type="outline" />
     </ScrollView>
@@ -180,9 +198,15 @@ const styles = StyleSheet.create({
     fontSize: 16,
     marginBottom: 10,
   },
-  loaderContainer: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
+  backButton: {
+    position: 'absolute',
+    top: 10,
+    left: 10,
+    zIndex: 10,
+  },
+  avatar: {
+    width: 100,
+    height: 100,
+    borderRadius: 50,
   },
 });

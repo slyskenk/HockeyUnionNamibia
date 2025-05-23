@@ -16,6 +16,7 @@ import { Ionicons, MaterialIcons } from '@expo/vector-icons';
 import { router } from 'expo-router';
 import { doc, getDoc } from 'firebase/firestore';
 import { db as firestore } from '../../firebase/firebase';
+import CustomButton from '../../components/CustomButton'; // Adjust path if needed
 
 const ProfileScreen = () => {
   const navigation = useNavigation();
@@ -32,13 +33,12 @@ const ProfileScreen = () => {
   const [scaleEdit] = useState(new Animated.Value(1));
   const [scaleLogout] = useState(new Animated.Value(1));
 
-  // Fetch user data from Firestore whenever screen is focused
   useFocusEffect(
     React.useCallback(() => {
       const fetchUserData = async () => {
         if (user) {
           try {
-            const docRef = doc(firestore, 'users', user.uid); // Only fetch your own document
+            const docRef = doc(firestore, 'users', user.uid);
             const docSnap = await getDoc(docRef);
 
             if (docSnap.exists()) {
@@ -62,7 +62,6 @@ const ProfileScreen = () => {
     }, [user])
   );
 
-  // Handle logout with confirmation
   const handleLogout = () => {
     Alert.alert('Confirm Logout', 'Are you sure you want to log out?', [
       { text: 'Cancel', style: 'cancel' },
@@ -77,7 +76,6 @@ const ProfileScreen = () => {
     ]);
   };
 
-  // Animate button press
   const animateButton = (button: Animated.Value, callback: () => void) => {
     Animated.sequence([
       Animated.timing(button, {
@@ -113,29 +111,32 @@ const ProfileScreen = () => {
 
       {/* Profile Picture + Edit Button */}
       <View style={styles.profileContainer}>
-        {profileData?.avatar ? (
-          <Image
-            source={{ uri: profileData.avatar }}
-            style={styles.avatar}
-            onError={() =>
-              setProfileData((prev) => ({ ...prev, avatar: null }))
-            }
-          />
-        ) : (
-          <Image
-            source={require('../../assets/images/avatar.jpg')}
-            style={styles.avatar}
-          />
-        )}
+        <View style={styles.avatarWrapper}>
+          {profileData?.avatar ? (
+            <Image
+              source={{ uri: profileData.avatar }}
+              style={styles.avatar}
+              onError={() =>
+                setProfileData((prev) => ({ ...prev, avatar: null }))
+              }
+            />
+          ) : (
+            <View style={styles.avatarFallback}>
+              <Text style={styles.avatarLetter}>
+                {profileData.name?.charAt(0)?.toUpperCase() || 'U'}
+              </Text>
+            </View>
+          )}
+        </View>
 
         <Animated.View style={{ transform: [{ scale: scaleEdit }] }}>
-          <TouchableOpacity
-            style={styles.editProfileButton}
-            onPress={() => animateButton(scaleEdit, () => router.push('/profile/editProfile'))}
-          >
-            <Ionicons name="pencil" size={18} color="#fff" style={{ marginRight: 8 }} />
-            <Text style={styles.editProfileButtonText}>Edit Profile</Text>
-          </TouchableOpacity>
+          <CustomButton
+            title="Edit Profile"
+            onPress={() =>
+              animateButton(scaleEdit, () => router.push('/profile/editProfile'))
+            }
+            style={styles.customEditButton}
+          />
         </Animated.View>
       </View>
 
@@ -202,6 +203,11 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingVertical: 24,
   },
+  avatarWrapper: {
+    width: 130,
+    height: 130,
+    marginBottom: 16,
+  },
   avatar: {
     width: 130,
     height: 130,
@@ -209,20 +215,27 @@ const styles = StyleSheet.create({
     borderWidth: 2,
     borderColor: '#ccc',
     backgroundColor: '#ddd',
-    marginBottom: 16,
   },
-  editProfileButton: {
-    flexDirection: 'row',
+  avatarFallback: {
+    width: 130,
+    height: 130,
+    borderRadius: 65,
+    backgroundColor: '#007bff',
     alignItems: 'center',
-    backgroundColor: '#007BFF',
+    justifyContent: 'center',
+  },
+  avatarLetter: {
+    color: '#fff',
+    fontSize: 48,
+    fontWeight: 'bold',
+  },
+  customEditButton: {
     paddingHorizontal: 24,
     paddingVertical: 12,
     borderRadius: 10,
-  },
-  editProfileButtonText: {
-    color: '#fff',
-    fontSize: 16,
-    fontWeight: '600',
+    minWidth: 200,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   infoContainer: {
     marginHorizontal: 20,

@@ -1,4 +1,4 @@
-import React, { useState, useRef } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import {
   View,
   Text,
@@ -9,130 +9,130 @@ import {
   LayoutAnimation,
   UIManager,
   Platform,
-  Image,
+  ActivityIndicator,
 } from 'react-native';
+import { onSnapshot, collection, query, orderBy } from 'firebase/firestore';
+import { db } from '../../firebase/firebase';
 import CustomButton from '../../components/CustomButton';
 import { router } from 'expo-router';
 
-const sampleEvent = {
-  title: 'Hockey Match',
-  team1: 'Team 1 Name',
-  team2: 'Team 2 Name',
-  date: 'DD/MM/YYYY',
-  time: '00:00',
-  venue: 'Some Location',
-  team1Logo: 'https://via.placeholder.com/50', // Replace with actual logo URL
-  team2Logo: 'https://via.placeholder.com/50', // Replace with actual logo URL
-};
-
-// Enable LayoutAnimation on Android
 if (Platform.OS === 'android' && UIManager.setLayoutAnimationEnabledExperimental) {
   UIManager.setLayoutAnimationEnabledExperimental(true);
 }
 
-const EventsScreen = ({ navigation }) => {
-  const [expanded, setExpanded] = useState(false);
+interface Event {
+  id: string;
+  team1: string;
+  team2: string;
+  date: string;
+  time: string;
+  venue: string;
+}
+
+const EventsScreen = () => {
+  const [events, setEvents] = useState<Event[]>([]);
+  const [expandedId, setExpandedId] = useState<string | null>(null);
   const animatedHeight = useRef(new Animated.Value(0)).current;
   const animatedOpacity = useRef(new Animated.Value(0)).current;
+  const [loading, setLoading] = useState(true);
 
-  const toggleExpand = () => {
+  useEffect(() => {
+    const unsubscribe = onSnapshot(query(collection(db, 'events'), orderBy('timestamp', 'desc')), snapshot => {
+      const data: Event[] = snapshot.docs.map(doc => ({
+        id: doc.id,
+        ...doc.data(),
+      })) as Event[];
+      setEvents(data);
+      setLoading(false);
+    });
+
+    return () => unsubscribe();
+  }, []);
+
+  const toggleExpand = (id: string) => {
     LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
-    setExpanded((prev) => !prev);
+    const isExpanded = expandedId === id;
+    setExpandedId(isExpanded ? null : id);
 
     Animated.timing(animatedHeight, {
-      toValue: expanded ? 0 : 120, // adjust height as needed
+      toValue: isExpanded ? 0 : 120,
       duration: 300,
       useNativeDriver: false,
     }).start();
 
     Animated.timing(animatedOpacity, {
-      toValue: expanded ? 0 : 1,
+      toValue: isExpanded ? 0 : 1,
       duration: 300,
       useNativeDriver: false,
     }).start();
   };
 
+  if (loading) {
+    return <ActivityIndicator style={{ marginTop: 40 }} size="large" color="#3B82F6" />;
+  }
+
   return (
     <ScrollView contentContainerStyle={styles.container}>
-      <TouchableOpacity style={styles.card} onPress={toggleExpand}>
-        <Text style={styles.title}>{sampleEvent.title}</Text>
+      {events.map(event => {
+        const isExpanded = expandedId === event.id;
 
-        {/* Team Row with Logos */}
-        <View style={styles.row}>
-          <View style={styles.teamContainer}>
-            <Image source={{ uri: sampleEvent.team1Logo }} style={styles.teamLogo} />
-            <View>
-              <Text style={styles.label}>TEAM 1</Text>
-              <Text style={styles.value}>{sampleEvent.team1}</Text>
-            </View>
-          </View>
-          <View style={styles.teamContainer}>
-            <Image source={{ uri: sampleEvent.team2Logo }} style={styles.teamLogo} />
-            <View>
-              <Text style={styles.label}>TEAM 2</Text>
-              <Text style={styles.value}>{sampleEvent.team2}</Text>
-            </View>
-          </View>
-        </View>
+        return (
+          <TouchableOpacity key={event.id} style={styles.card} onPress={() => toggleExpand(event.id)}>
+            <Text style={styles.title}>Hockey Match</Text>
 
-        <View style={styles.row}>
-          <View>
-            <Text style={styles.label}>DATE</Text>
-            <Text style={styles.value}>{sampleEvent.date}</Text>
-          </View>
-          {expanded && (
-            <View>
-              <Text style={styles.label}>TIME</Text>
-              <Text style={styles.value}>{sampleEvent.time}</Text>
-            </View>
-          )}
-        </View>
-
-        {/* Expandable section */}
-        <Animated.View
-          style={[
-            styles.expandSection,
-            {
-              height: animatedHeight,
-              opacity: animatedOpacity,
-            },
-          ]}
-        >
-          <View style={styles.row}>
-            <View style={styles.teamContainer}>
-              <Image source={{ uri: sampleEvent.team1Logo }} style={styles.teamLogo} />
+            {/* Team Row */}
+            <View style={styles.row}>
               <View>
                 <Text style={styles.label}>TEAM 1</Text>
-                <Text style={styles.value}>{sampleEvent.team1}</Text>
+                <Text style={styles.value}>{event.team1}</Text>
               </View>
-            </View>
-            <View style={styles.teamContainer}>
-              <Image source={{ uri: sampleEvent.team2Logo }} style={styles.teamLogo} />
               <View>
                 <Text style={styles.label}>TEAM 2</Text>
-                <Text style={styles.value}>{sampleEvent.team2}</Text>
+                <Text style={styles.value}>{event.team2}</Text>
               </View>
             </View>
-          </View>
 
-          <View style={styles.row}>
-            <View>
-              <Text style={styles.label}>DATE</Text>
-              <Text style={styles.value}>{sampleEvent.date}</Text>
+            {/* Date and Time */}
+            <View style={styles.row}>
+              <View>
+                <Text style={styles.label}>DATE</Text>
+                <Text style={styles.value}>{event.date}</Text>
+              </View>
+              {isExpanded && (
+                <View>
+                  <Text style={styles.label}>TIME</Text>
+                  <Text style={styles.value}>{event.time}</Text>
+                </View>
+              )}
             </View>
-            <View>
-              <Text style={styles.label}>VENUE</Text>
-              <Text style={styles.value}>{sampleEvent.venue}</Text>
-            </View>
-          </View>
 
-          <CustomButton
-            title="Edit Event"
-            onPress={() => router.push('/events/createEvents')}
-            style={styles.editButton}
-          />
-        </Animated.View>
-      </TouchableOpacity>
+            {/* Expandable Section */}
+            {isExpanded && (
+              <Animated.View
+                style={[
+                  styles.expandSection,
+                  {
+                    height: animatedHeight,
+                    opacity: animatedOpacity,
+                  },
+                ]}
+              >
+                <View style={styles.row}>
+                  <View>
+                    <Text style={styles.label}>VENUE</Text>
+                    <Text style={styles.value}>{event.venue}</Text>
+                  </View>
+                </View>
+                <CustomButton
+                  title="Edit Event"
+                  onPress={() => router.push(`/events/createEvents?id=${event.id}`)}
+                  style={styles.editButton}
+                />
+              </Animated.View>
+            )}
+          </TouchableOpacity>
+        );
+      })}
 
       <CustomButton
         title="Create new event"
@@ -146,7 +146,7 @@ const EventsScreen = ({ navigation }) => {
 const styles = StyleSheet.create({
   container: {
     padding: 20,
-    justifyContent: 'space-between',
+    paddingBottom: 100,
   },
   card: {
     backgroundColor: '#D6E7FF',
@@ -183,24 +183,13 @@ const styles = StyleSheet.create({
   },
   expandSection: {
     overflow: 'hidden',
-  },
-  bottomButton: {
-    marginTop: 40,
+    marginTop: 10,
   },
   editButton: {
     marginTop: 16,
   },
-  teamContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-  },
-  teamLogo: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    marginRight: 8,
-    backgroundColor: '#CBD5E1',
+  bottomButton: {
+    marginTop: 40,
   },
 });
 

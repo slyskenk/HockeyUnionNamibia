@@ -1,7 +1,7 @@
 
 import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
-import Settings from '../components/Settings'; // Adjust path
+import Settings from '../components/settings'; // Adjust path
 
 const Stack = createNativeStackNavigator();
 

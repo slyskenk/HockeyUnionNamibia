@@ -4,7 +4,7 @@ import { getAuth } from "firebase/auth";
 import { getFirestore } from "firebase/firestore";
 import { getStorage } from "firebase/storage";
 
-// ✅ Your Firebase configuration — double-checked against your project ID
+
 const firebaseConfig = {
   apiKey: "AIzaSyA-Z-7mzFScX-BTDD85ShkGGL6iavxeIOE",
   authDomain: "hockey-union.firebaseapp.com",

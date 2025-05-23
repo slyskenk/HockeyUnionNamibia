@@ -1,5 +1,5 @@
 import { useNavigation } from '@react-navigation/native';
-import { Button, ButtonGroup, Input, Text } from '@rneui/themed';
+import { Button, ButtonGroup, Input, Text } from 'react-native';
 import { auth, db, storage } from '../firebase/firebase';
 import { signOut, updateEmail, updatePassword } from 'firebase/auth';
 import { doc, getDoc, updateDoc } from 'firebase/firestore';

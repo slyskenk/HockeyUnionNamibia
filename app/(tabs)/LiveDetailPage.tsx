@@ -13,24 +13,20 @@ import {
   Keyboard,
 } from 'react-native';
 import { AntDesign } from '@expo/vector-icons';
-import SearchBar from '../../components/SearchBar';
 
-const initialMessages = [
-  {
-    id: '1',
-    user: 'Alice',
-    profilePic: 'https://i.pravatar.cc/150?img=1',
-    text: 'Welcome to the community!',
-    likes: 2,
-  },
-  {
-    id: '2',
-    user: 'Bob',
-    profilePic: 'https://i.pravatar.cc/150?img=2',
-    text: 'Hey everyone!',
-    likes: 1,
-  },
-];
+import { db } from '../../firebase/firebase';
+import {
+  collection,
+  addDoc,
+  onSnapshot,
+  query,
+  orderBy,
+  serverTimestamp,
+  updateDoc,
+  doc,
+  increment,
+} from 'firebase/firestore';
+import { getAuth } from 'firebase/auth';
 
 const TypingIndicator = () => {
   const dot1 = useRef(new Animated.Value(0.3)).current;
@@ -71,9 +67,24 @@ const TypingIndicator = () => {
 };
 
 const CommunityForumScreen = () => {
-  const [messages, setMessages] = useState(initialMessages);
+  const [messages, setMessages] = useState([]);
   const [newMessage, setNewMessage] = useState('');
   const [typing, setTyping] = useState(false);
+
+  const auth = getAuth();
+  const user = auth.currentUser;
+
+  useEffect(() => {
+    const q = query(collection(db, 'messages'), orderBy('timestamp', 'asc'));
+    const unsubscribe = onSnapshot(q, (snapshot) => {
+      const fetchedMessages = snapshot.docs.map((doc) => ({
+        id: doc.id,
+        ...doc.data(),
+      }));
+      setMessages(fetchedMessages);
+    });
+    return () => unsubscribe();
+  }, []);
 
   useEffect(() => {
     let timeout;
@@ -83,27 +94,33 @@ const CommunityForumScreen = () => {
     return () => clearTimeout(timeout);
   }, [typing]);
 
-  const handleSend = () => {
+  const handleSend = async () => {
     if (!newMessage.trim()) return;
-    const newMsg = {
-      id: Date.now().toString(),
-      user: 'You',
-      profilePic: 'https://i.pravatar.cc/150?img=3',
+
+    if (!user) {
+      alert('You must be logged in to send a message.');
+      return;
+    }
+
+    await addDoc(collection(db, 'messages'), {
       text: newMessage.trim(),
+      user: user.displayName || 'Anonymous',
+      profilePic: user.photoURL || 'https://i.pravatar.cc/150?img=3',
+      uid: user.uid,
       likes: 0,
-    };
-    setMessages((prev) => [...prev, newMsg]);
+      timestamp: serverTimestamp(),
+    });
+
     setNewMessage('');
     setTyping(false);
     Keyboard.dismiss();
   };
 
-  const handleLike = (id) => {
-    setMessages((prev) =>
-      prev.map((msg) =>
-        msg.id === id ? { ...msg, likes: msg.likes + 1 } : msg
-      )
-    );
+  const handleLike = async (id) => {
+    const msgRef = doc(db, 'messages', id);
+    await updateDoc(msgRef, {
+      likes: increment(1),
+    });
   };
 
   return (
@@ -112,7 +129,7 @@ const CommunityForumScreen = () => {
       behavior={Platform.OS === 'ios' ? 'padding' : undefined}
       keyboardVerticalOffset={90}
     >
-      <SearchBar />
+      
       <FlatList
         data={messages}
         keyExtractor={(item) => item.id}
@@ -121,8 +138,7 @@ const CommunityForumScreen = () => {
         keyboardDismissMode="on-drag"
         onScrollBeginDrag={() => setTyping(false)}
         renderItem={({ item }) => {
-          const isOwnMessage = item.user === 'You';
-
+          const isOwnMessage = user && item.uid === user.uid;
           return (
             <View
               style={[
@@ -139,9 +155,8 @@ const CommunityForumScreen = () => {
                   isOwnMessage ? styles.myMessageContent : null,
                 ]}
               >
-                {!isOwnMessage && (
-                  <Text style={styles.username}>{item.user}</Text>
-                )}
+                {!isOwnMessage && <Text style={styles.username}>{item.user}</Text>}
+
                 <Text
                   style={[
                     styles.messageText,
@@ -150,6 +165,17 @@ const CommunityForumScreen = () => {
                 >
                   {item.text}
                 </Text>
+
+                {/* Timestamp */}
+                <Text style={styles.timestamp}>
+                  {item.timestamp?.toDate
+                    ? new Date(item.timestamp.toDate()).toLocaleTimeString([], {
+                        hour: '2-digit',
+                        minute: '2-digit',
+                      })
+                    : ''}
+                </Text>
+
                 <TouchableOpacity
                   onPress={() => handleLike(item.id)}
                   style={[
@@ -241,6 +267,12 @@ const styles = StyleSheet.create({
   myMessageText: {
     textAlign: 'right',
     color: '#1E3A8A',
+  },
+  timestamp: {
+    fontSize: 10,
+    color: '#6B7280',
+    marginTop: 4,
+    textAlign: 'right',
   },
   likeRow: {
     flexDirection: 'row',

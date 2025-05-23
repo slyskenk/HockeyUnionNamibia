@@ -5,7 +5,7 @@ import { useLocalSearchParams, useRouter } from 'expo-router';
 
 const ArticlePage = () => {
   const router = useRouter();
-  const { title, imageUrl, description = '' } = useLocalSearchParams();
+  const { title, imageUrl, content = '' } = useLocalSearchParams();
 
   return (
     <ScrollView style={styles.container}>
@@ -17,10 +17,12 @@ const ArticlePage = () => {
       <Text style={styles.title}>{title}</Text>
       <Text style={styles.author}>April 18, 2025 by Sports Daily</Text>
 
-      <Image source={{ uri: imageUrl }} style={styles.image} />
+      {imageUrl ? (
+        <Image source={{ uri: imageUrl }} style={styles.image} />
+      ) : null}
 
       <Text style={styles.body}>
-        {(description || 'This article covers important developments in the hockey world. ').repeat(10)}
+        {content || 'No description available for this article.'}
       </Text>
     </ScrollView>
   );

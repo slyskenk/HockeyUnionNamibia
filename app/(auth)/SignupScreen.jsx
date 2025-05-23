@@ -3,7 +3,8 @@ import { Alert, Image, StyleSheet, Text, TextInput, TouchableOpacity, View } fro
 import SocialButtons from '../../components/SocialButton';
 import { useRouter } from 'expo-router';
 import { createUserWithEmailAndPassword, onAuthStateChanged } from 'firebase/auth';
-import { auth } from '../../firebase/firebase';
+import { auth, db } from '../../firebase/firebase';
+import { doc, setDoc } from 'firebase/firestore';
 
 export default function SignupScreen() {
   const router = useRouter();
@@ -18,7 +19,6 @@ export default function SignupScreen() {
     const unsubscribe = onAuthStateChanged(auth, (user) => {
       if (user) {
         Alert.alert('Already signed in', `Welcome back ${user.email}`);
-        Alert.alert('Signed In', 'Welcome! ❤️');
       }
     });
     return unsubscribe;
@@ -30,22 +30,24 @@ export default function SignupScreen() {
       return;
     }
 
-    
-
     setLoading(true);
-
-
 
     try {
       const userCredential = await createUserWithEmailAndPassword(auth, email, password);
       const user = userCredential.user;
+
+      // 🔥 Save user info in Firestore
+      await setDoc(doc(db, 'users', user.uid), {
+        name: name,
+        email: email,
+      
+        createdAt: new Date().toISOString(),
+        profileImage: '', // optional placeholder for later use
+      });
+
       setLoading(false);
       Alert.alert('Success', `Account created for ${user.email}`);
       router.push('/news');
-
-
-
-
     } catch (error) {
       setLoading(false);
       let message = 'Signup failed. Please try again.';
@@ -90,8 +92,6 @@ export default function SignupScreen() {
   );
 }
 
-// Your existing styles remain unchanged
-
 const styles = StyleSheet.create({
   container: { flex: 1, padding: 24, alignItems: 'center', backgroundColor: '#fff' },
   logo: { width: 80, height: 80, marginTop: 30 },
@@ -99,10 +99,6 @@ const styles = StyleSheet.create({
   input: {
     width: '100%', height: 50, backgroundColor: '#f0f0f0', borderRadius: 10, paddingHorizontal: 16, marginVertical: 8,
   },
-  checkboxContainer: {
-    flexDirection: 'row', alignItems: 'center', marginBottom: 10,
-  },
-  checkboxText: { marginLeft: 8 },
   button: { backgroundColor: '#005D8F', width: '100%', height: 50, justifyContent: 'center', alignItems: 'center', borderRadius: 10, marginVertical: 12 },
   buttonText: { color: '#fff', fontWeight: 'bold' },
   orText: { marginVertical: 8 },

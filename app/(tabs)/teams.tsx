@@ -2,43 +2,38 @@ import { useFocusEffect, useNavigation } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
 import { LinearGradient } from 'expo-linear-gradient';
 import { router } from 'expo-router';
-import React, { useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import {
   Image,
-  ImageSourcePropType,
   ScrollView,
   StyleSheet,
   Text,
   TouchableOpacity,
-  View
+  View,
 } from 'react-native';
+import SearchBar from '../../components/teamsSearchBar';
+import { getFirestore, collection, onSnapshot } from 'firebase/firestore';
+import { firebaseApp } from '../../firebase/firebase'; // Ensure correct path
 
-// Import the custom SearchBar component
-// IMPORTANT: Adjusted path for common expo-router project structures.
-// If your 'components' folder is directly inside 'app', use '../components/SearchBar'.
-// If 'teams.tsx' is directly in 'app' and 'components' is at root, use '../components/SearchBar'.
-// If 'teams.tsx' is in 'app/(tabs)/teams.tsx' and 'components' is at root, use '../../components/SearchBar'.
-import SearchBar from '../../components/teamsSearchBar'; // Assuming app/(tabs)/teams.tsx -> components/SearchBar.tsx
+// Firebase setup
+const db = getFirestore(firebaseApp);
 
-// Define Player interface (consistent with RegisterTeamScreen)
+// Interfaces
 interface Player {
-    id: string;
-    name: string;
-    kitNumber: string;
-    position: string;
-    dob: string;
-    caps: string;
+  id: string;
+  name: string;
+  kitNumber: string;
+  position: string;
+  dob: string;
+  caps: string;
 }
 
-// Define Team interface, now consistent with RegisterTeamScreen for incoming data
 interface Team {
-  id: string; // ID is mandatory for existing teams
+  id: string;
   name: string;
-  coach: string; // This will be contactPerson from RegisterTeamScreen for newly added teams
-  logo: ImageSourcePropType;
-  players?: Player[]; // Make players optional here if not all teams will have it, or mandatory if always expected
-
-  // Add properties from RegisterTeamScreen's Team interface for incoming newTeam data
+  coach: string;
+  logo: string | { uri: string };
+  players?: Player[];
   contactPerson?: string;
   contactPersonCellNumber?: string;
   contactPersonEmail?: string;
@@ -49,143 +44,66 @@ interface Team {
   idea?: string;
 }
 
-// Define the type for the navigation parameters.
 type RootStackParamList = {
-    TeamsScreen: { newTeam?: Team } | undefined; // newTeam is optional as it's not always passed
-    RegisterTeamScreen: undefined; // Add other screen names and their params if necessary
-    EditTeamScreen: { teamId: string }; // Add other screen names and their params if necessary
+  TeamsScreen: { newTeam?: Team } | undefined;
+  RegisterTeamScreen: undefined;
+  EditTeamScreen: { teamId: string };
 };
 
-type TeamsScreenNavigationProp = StackNavigationProp<RootStackParamList, 'TeamsScreen'>;
-
-
-// Dummy data for local teams with local image imports
-const initialLocalTeamsData: Team[] = [
-  {
-    id: 'saints-hockey',
-    name: 'Saints Hockey',
-    coach: 'Johan Weyhe',
-    logo: require('../../assets/images/find_a_club/Saints-Big.png'),
-    players: [], // Initialize with empty array or relevant player data
-  },
-  {
-    id: 'school-of-excellence',
-    name: 'The School of Excellence Hockey Club',
-    coach: 'Melissa Gillies',
-    logo: require('../../assets/images/find_a_club/School-of-Excellencer.png'),
-    players: [],
-  },
-  {
-    id: 'red-triangle-club',
-    name: 'DTS',
-    coach: 'Coach C',
-    logo: require('../../assets/images/find_a_club/DTS-01r.png'),
-    players: [],
-  },
-  {
-    id: 'namibia-masters-hockey',
-    name: 'Namibia Masters Hockey',
-    coach: 'Coach D',
-    logo: require('../../assets/images/find_a_club/NAMIBIA-MASTERS-HOCKEY-LOGO-01r-1536x1086.png'),
-    players: [],
-  },
-  {
-    id: 'wanderers-windhoek',
-    name: 'Wanderers Windhoek',
-    coach: 'Coach E',
-    logo: require('../../assets/images/find_a_club/wanderers.png'),
-    players: [],
-  },
-  {
-    id: 'hockey-leaves-club',
-    name: 'Team X',
-    coach: 'Coach F',
-    logo: require('../../assets/images/find_a_club/Team-X.jpg'),
-    players: [],
-  },
-  {
-    id: 'coastal-raiders-hockey-club',
-    name: 'Coastal Raiders Hockey Club',
-    coach: 'Coach G',
-    logo: require('../../assets/images/find_a_club/Coastal-Raidersr.png'),
-    players: [],
-  },
-  {
-    id: 'sparta-hockey-club',
-    name: 'Sparta Hockey Club',
-    coach: 'Coach H',
-    logo: require('../../assets/images/find_a_club/Sparta-1024x1448.jpg'),
-    players: [],
-  },
-  {
-    id: 'windhoek-old-boys',
-    name: 'Windhoek Old Boys',
-    coach: 'Coach I',
-    logo: require('../../assets/images/find_a_club/Old-Boys.jpg'),
-    players: [],
-  },
-];
+type TeamsScreenNavigationProp = StackNavigationProp<
+  RootStackParamList,
+  'TeamsScreen'
+>;
 
 const TeamsScreen = () => {
   const navigation = useNavigation<TeamsScreenNavigationProp>();
-  const [searchQuery, setSearchQuery] = useState('');
   const [teams, setTeams] = useState<Team[]>([]);
+  const [searchQuery, setSearchQuery] = useState('');
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  // Load initial teams data
+  // Real-time fetch teams from Firestore
   useEffect(() => {
-    setTeams(initialLocalTeamsData);
-    setLoading(false);
-  }, []);
+    const unsubscribe = onSnapshot(
+      collection(db, 'teams'),
+      (snapshot) => {
+        const fetchedTeams: Team[] = snapshot.docs.map((doc) => {
+          const data = doc.data();
+          return {
+            id: doc.id,
+            name: data.name || 'Unnamed Club',
+            coach: data.contactPerson || 'Unknown',
+            logo:
+              typeof data.logo === 'string'
+                ? { uri: data.logo }
+                : require('../../assets/images/genericClubAvatar.jpg'), // fallback logo
+            players: data.players || [],
+            contactPerson: data.contactPerson,
+            contactPersonCellNumber: data.contactPersonCellNumber,
+            contactPersonEmail: data.contactPersonEmail,
+            nominatedUmpireName: data.nominatedUmpireName,
+            nominatedUmpireCellphoneNumber: data.nominatedUmpireCellphoneNumber,
+            premierDivision: data.premierDivision,
+            termsAndConditions: data.termsAndConditions,
+            idea: data.idea,
+          };
+        });
 
-  // Use useFocusEffect to listen for navigation events when the screen is focused
-  useFocusEffect(
-    React.useCallback(() => {
-      const currentRoute = navigation.getState().routes.find(
-        (route) => route.name === 'TeamsScreen'
-      );
-
-      // Safely access params and newTeam with correct type assertion
-      const params = currentRoute?.params as RootStackParamList['TeamsScreen'];
-      const newTeam = params?.newTeam;
-
-      if (newTeam && !teams.some((team) => team.id === newTeam.id)) {
-        // Map the newTeam data to the structure expected by TeamsScreen's Team interface
-        // Specifically, map contactPerson to coach, and ensure logo is ImageSourcePropType
-        const teamToAdd: Team = {
-            id: newTeam.id || `team-${Date.now()}`, // Ensure ID exists
-            name: newTeam.name,
-            coach: newTeam.contactPerson || 'N/A', // Map contactPerson to coach, provide fallback
-            logo: typeof newTeam.logo === 'string' ? { uri: newTeam.logo } : newTeam.logo, // Handle logo type
-            players: newTeam.players, // Include players
-            // Copy other relevant properties if needed for display or future use
-            contactPerson: newTeam.contactPerson,
-            contactPersonCellNumber: newTeam.contactPersonCellNumber,
-            contactPersonEmail: newTeam.contactPersonEmail,
-            nominatedUmpireName: newTeam.nominatedUmpireName,
-            nominatedUmpireCellphoneNumber: newTeam.nominatedUmpireCellphoneNumber,
-            premierDivision: newTeam.premierDivision,
-            termsAndConditions: newTeam.termsAndConditions,
-            idea: newTeam.idea,
-        };
-        setTeams((prevTeams) => [...prevTeams, teamToAdd]);
-
-        // IMPORTANT: In a real app, after consuming the param, you should clear it
-        // from the navigation state to prevent re-adding the team on subsequent focuses.
-        // This is tricky with expo-router's router.push directly.
-        // A more robust solution involves a global state management library or
-        // a custom navigation action to clear params.
+        setTeams(fetchedTeams);
+        setLoading(false);
+      },
+      (err) => {
+        console.error('Error fetching teams:', err);
+        setError('Failed to load teams. Please try again later.');
+        setLoading(false);
       }
-    }, [navigation, teams]) // Depend on navigation and teams to react to changes
-  );
+    );
+
+    return () => unsubscribe(); // Clean up listener
+  }, []);
 
   const handleSearch = (query: string) => {
     setSearchQuery(query);
-    const filteredTeams = initialLocalTeamsData.filter((team) =>
-      team.name.toLowerCase().includes(query.toLowerCase())
-    );
-    setTeams(filteredTeams);
   };
 
   const goToRegisterClub = () => {
@@ -196,10 +114,14 @@ const TeamsScreen = () => {
     router.push({ pathname: '/teams/editTeam', params: { teamId } });
   };
 
+  const filteredTeams = teams.filter((team) =>
+    team.name.toLowerCase().includes(searchQuery.toLowerCase())
+  );
+
   if (loading) {
     return (
       <View style={styles.loadingContainer}>
-        <Text>Loading Teams...</Text>
+        <Text>Loading teams...</Text>
       </View>
     );
   }
@@ -216,49 +138,48 @@ const TeamsScreen = () => {
   }
 
   return (
-    <ScrollView
-      style={styles.container}
-      contentContainerStyle={styles.scrollViewContentContainer}
-    >
-      {/* Header Section */}
+    <ScrollView style={styles.container} contentContainerStyle={styles.scrollViewContentContainer}>
       <View style={styles.header}>
         <Text style={styles.headerTitle}>Local Teams</Text>
       </View>
 
-      {/* Search Bar Section - Using the custom SearchBar component */}
       <SearchBar
         query={searchQuery}
         onChangeText={handleSearch}
         profilePic={null}
       />
 
-      {/* All Teams Section */}
       <Text style={styles.sectionTitle}>All Clubs</Text>
-      {teams.map((team) => (
+      {filteredTeams.map((team) => (
         <TouchableOpacity
           key={team.id}
           style={styles.teamCard}
           onPress={() => goToEditClub(team.id)}
         >
           <View style={styles.teamInfo}>
-            <Image source={team.logo} style={styles.teamLogo} />
+            <Image
+              source={
+                typeof team.logo === 'string'
+                  ? { uri: team.logo }
+                  : team.logo
+              }
+              style={styles.teamLogo}
+            />
             <View>
               <Text style={styles.teamName}>{team.name}</Text>
-              <Text style={styles.coach}>Current Coach: {team.coach}</Text>
+              <Text style={styles.coach}>Coach: {team.coach}</Text>
               {team.players && team.players.length > 0 && (
-                <Text style={styles.playerCountText}>Players: {team.players.length}</Text>
+                <Text style={styles.playerCountText}>
+                  Players: {team.players.length}
+                </Text>
               )}
             </View>
           </View>
         </TouchableOpacity>
       ))}
 
-      {/* Action Buttons Section */}
       <View style={styles.buttonContainer}>
-        <TouchableOpacity
-          style={styles.registerButton}
-          onPress={goToRegisterClub}
-        >
+        <TouchableOpacity style={styles.registerButton} onPress={goToRegisterClub}>
           <LinearGradient colors={['#246BFD', '#0C0C69']} style={styles.gradient}>
             <Text style={styles.buttonText}>Register a club</Text>
           </LinearGradient>
@@ -284,13 +205,6 @@ const styles = StyleSheet.create({
   },
   header: { padding: 16, marginTop: 20 },
   headerTitle: { fontSize: 24, fontWeight: 'bold', color: 'black' },
-  searchInput: {
-    flex: 1,
-    height: '100%',
-    paddingHorizontal: 10,
-    fontSize: 16,
-    color: '#333',
-  },
   sectionTitle: {
     fontSize: 18,
     fontWeight: 'bold',

@@ -1,10 +1,20 @@
-import { Image, StyleSheet, Text, TextInput, TouchableOpacity, View, Alert, ActivityIndicator } from 'react-native';
+import {
+  Image,
+  StyleSheet,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  View,
+  Alert,
+  ActivityIndicator,
+} from 'react-native';
 import SocialButtons from '../../components/SocialButton';
 import { useRouter } from 'expo-router';
 import React, { useState } from 'react';
 
 import { signInWithEmailAndPassword } from 'firebase/auth';
-import { auth } from '../../firebase/firebase';
+import { auth, db } from '../../firebase/firebase';
+import { doc, getDoc } from 'firebase/firestore';
 
 export default function LoginScreen() {
   const router = useRouter();
@@ -18,10 +28,21 @@ export default function LoginScreen() {
     try {
       const userCredential = await signInWithEmailAndPassword(auth, email, password);
       const user = userCredential.user;
-      setLoading(false);
-      router.replace('/news');
 
-      // Navigate or perform other actions here
+      // 🔥 Fetch user data from Firestore
+      const userDocRef = doc(db, 'users', user.uid);
+      const userDoc = await getDoc(userDocRef);
+
+      if (userDoc.exists()) {
+        const userData = userDoc.data();
+        console.log('User data from Firestore:', userData);
+      } else {
+        console.log('No user data found in Firestore.');
+      }
+
+      setLoading(false);
+      router.replace('/news'); // Navigate to News screen
+
     } catch (error) {
       setLoading(false);
       let message = 'Login failed. Please try again.';

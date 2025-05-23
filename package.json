@@ -12,16 +12,19 @@
   },
   "dependencies": {
     "@expo/vector-icons": "^14.1.0",
+<<<<<<< HEAD
     "@react-native-community/datetimepicker": "^8.3.0",
     "@react-native-firebase/storage": "^22.2.0",
+=======
+    "@google/generative-ai": "^0.24.1",
+    "@react-native-community/datetimepicker": "github:react-native-community/datetimepicker",
+>>>>>>> f274b02f5e04e75c22809a3313a0bb82b8998d97
     "@react-native-picker/picker": "^2.11.0",
     "@react-navigation/bottom-tabs": "^7.3.13",
     "@react-navigation/elements": "^2.3.8",
     "@react-navigation/native": "^7.1.9",
     "@react-navigation/native-stack": "^7.3.13",
     "@react-navigation/stack": "^7.3.2",
-    "@rneui/base": "^4.0.0-rc.8",
-    "@rneui/themed": "^4.0.0-rc.8",
     "expo": "~53.0.9",
     "expo-av": "~15.1.4",
     "expo-blur": "~14.1.4",
@@ -45,6 +48,7 @@
     "react": "^19.0.0",
     "react-dom": "19.0.0",
     "react-native": "0.79.2",
+    "react-native-dotenv": "^3.4.11",
     "react-native-gesture-handler": "~2.24.0",
     "react-native-image-picker": "^8.2.1",
     "react-native-paper": "^5.14.4",

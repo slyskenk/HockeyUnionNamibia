@@ -1,15 +1,17 @@
 import { useNavigation } from '@react-navigation/native';
-import { Button, ButtonGroup, Input, Text } from '@rneui/themed';
-import { getAuth, signOut, updateEmail, updatePassword } from 'firebase/auth';
+import { Button, ButtonGroup, Input, Text } from 'react-native';
+import { auth, db, storage } from '../firebase/firebase';
+import { signOut, updateEmail, updatePassword } from 'firebase/auth';
 import { doc, getDoc, updateDoc } from 'firebase/firestore';
+import { getDownloadURL, ref, uploadBytes } from 'firebase/storage';
+import * as ImagePicker from 'expo-image-picker';
 import React, { useEffect, useState } from 'react';
-import { Alert, ScrollView, StyleSheet } from 'react-native';
-import { db } from '../firebase/firebase';
+import { Alert, Image, ScrollView, StyleSheet, TouchableOpacity, View } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
 
 export default function Settings() {
-  const auth = getAuth();
-  const user = auth.currentUser;
   const navigation = useNavigation();
+  const user = auth.currentUser;
 
   const [roleIndex, setRoleIndex] = useState(0);
   const [email, setEmail] = useState('');
@@ -17,6 +19,7 @@ export default function Settings() {
   const [newEmail, setNewEmail] = useState('');
   const [newPassword, setNewPassword] = useState('');
   const [loading, setLoading] = useState(false);
+  const [imageUrl, setImageUrl] = useState(null);
 
   const roles = ['Fan', 'Supporter'];
 
@@ -24,6 +27,8 @@ export default function Settings() {
     if (user) {
       setEmail(user.email);
       loadUserData();
+    } else {
+      Alert.alert("Error", "No authenticated user found");
     }
   }, []);
 
@@ -34,11 +39,14 @@ export default function Settings() {
       if (docSnap.exists()) {
         const userData = docSnap.data();
         setRole(userData.role);
+        setImageUrl(userData.photoURL);
         const index = roles.indexOf(userData.role);
         if (index !== -1) setRoleIndex(index);
+      } else {
+        Alert.alert('Error', 'User data not found in Firestore');
       }
     } catch (error) {
-      Alert.alert('Error fetching user data', error.message);
+      Alert.alert('Error loading user data', error.message);
     }
   }
 
@@ -57,9 +65,15 @@ export default function Settings() {
   }
 
   async function handleUpdateEmail() {
+    if (!newEmail) {
+      Alert.alert("Error", "Please enter a new email");
+      return;
+    }
+
     try {
       setLoading(true);
       await updateEmail(user, newEmail);
+      await updateDoc(doc(db, 'users', user.uid), { email: newEmail });
       setEmail(newEmail);
       Alert.alert('Success', 'Email updated!');
     } catch (error) {
@@ -70,6 +84,11 @@ export default function Settings() {
   }
 
   async function handleUpdatePassword() {
+    if (!newPassword) {
+      Alert.alert("Error", "Please enter a new password");
+      return;
+    }
+
     try {
       setLoading(true);
       await updatePassword(user, newPassword);
@@ -81,14 +100,31 @@ export default function Settings() {
     }
   }
 
+  async function handleImagePick() {
+    const result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ImagePicker.MediaTypeOptions.Images,
+      allowsEditing: true,
+      aspect: [1, 1],
+      quality: 0.7,
+    });
+
+    if (!result.canceled) {
+      const response = await fetch(result.assets[0].uri);
+      const blob = await response.blob();
+      const imageRef = ref(storage, `avatars/${user.uid}`);
+      await uploadBytes(imageRef, blob);
+      const url = await getDownloadURL(imageRef);
+      setImageUrl(url);
+      await updateDoc(doc(db, 'users', user.uid), { photoURL: url });
+      Alert.alert('Success', 'Profile picture updated!');
+    }
+  }
+
   function handleSignOut() {
     signOut(auth)
       .then(() => {
         Alert.alert('Signed out successfully!');
-        navigation.reset({
-          index: 0,
-          routes: [{ name: 'Login' }], // Replace with your login screen name
-        });
+        navigation.reset({ index: 0, routes: [{ name: 'Login' }] });
       })
       .catch((error) => {
         Alert.alert('Sign Out Error', error.message);
@@ -97,10 +133,24 @@ export default function Settings() {
 
   return (
     <ScrollView contentContainerStyle={styles.container}>
+      <TouchableOpacity style={styles.backButton} onPress={() => navigation.goBack()}>
+        <Ionicons name="arrow-back" size={24} color="black" />
+      </TouchableOpacity>
+
       <Text h4 style={styles.heading}>Settings</Text>
 
-      <Text style={styles.label}>Email: {email}</Text>
-      <Text style={styles.label}>Current Role: {role}</Text>
+      <View style={{ alignItems: 'center', marginBottom: 20 }}>
+        <TouchableOpacity onPress={handleImagePick}>
+          {imageUrl ? (
+            <Image source={{ uri: imageUrl }} style={styles.avatar} />
+          ) : (
+            <Text>Tap to upload profile picture</Text>
+          )}
+        </TouchableOpacity>
+      </View>
+
+      <Text style={styles.label}>Email: {email || 'Not found'}</Text>
+      <Text style={styles.label}>Current Role: {role || 'Unknown'}</Text>
 
       <Text style={[styles.label, { marginTop: 20 }]}>Change Role:</Text>
       <ButtonGroup
@@ -147,5 +197,16 @@ const styles = StyleSheet.create({
   label: {
     fontSize: 16,
     marginBottom: 10,
+  },
+  backButton: {
+    position: 'absolute',
+    top: 10,
+    left: 10,
+    zIndex: 10,
+  },
+  avatar: {
+    width: 100,
+    height: 100,
+    borderRadius: 50,
   },
 });

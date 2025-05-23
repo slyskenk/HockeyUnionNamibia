@@ -2,15 +2,15 @@ import { Ionicons } from '@expo/vector-icons';
 import { ChatSession } from '@google/generative-ai';
 import React, { useEffect, useRef, useState } from 'react';
 import {
-    ActivityIndicator,
-    FlatList,
-    KeyboardAvoidingView,
-    Platform,
-    StyleSheet,
-    Text,
-    TextInput,
-    TouchableOpacity,
-    View,
+  ActivityIndicator,
+  FlatList,
+  KeyboardAvoidingView,
+  Platform,
+  StyleSheet,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  View,
 } from 'react-native';
 
 import { sendMessageInChat, startNewGeminiChatSession } from '../../services/geminiService';

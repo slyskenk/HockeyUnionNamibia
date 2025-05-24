@@ -13,12 +13,6 @@ import {
 import { useNavigation } from '@react-navigation/native';
 import * as ImagePicker from 'expo-image-picker';
 import {
-  getStorage,
-  ref,
-  uploadBytes,
-  getDownloadURL,
-} from 'firebase/storage';
-import {
   getFirestore,
   doc,
   setDoc,
@@ -31,34 +25,7 @@ import {
 } from 'firebase/auth';
 import { Ionicons } from '@expo/vector-icons';
 import CustomButton from '../../components/CustomButton';
-
-const uploadImageAsync = async (uri, path) => {
-  try {
-    const blob = await new Promise((resolve, reject) => {
-      const xhr = new XMLHttpRequest();
-      xhr.onload = () => resolve(xhr.response);
-      xhr.onerror = (e) => {
-        console.log('XHR error', e);
-        reject(new TypeError('Network request failed'));
-      };
-      xhr.responseType = 'blob';
-      xhr.open('GET', uri, true);
-      xhr.send(null);
-    });
-
-    const storage = getStorage();
-    const fileRef = ref(storage, path);
-    await uploadBytes(fileRef, blob);
-
-    blob.close?.(); // Optional cleanup
-
-    const downloadURL = await getDownloadURL(fileRef);
-    return downloadURL;
-  } catch (error) {
-    console.error('Upload failed:', error.code, error.message,errorserverResponse);
-    throw error;
-  }
-};
+import { upload } from '../../firebase/upload'; // Make sure the path is correct
 
 const EditProfileScreen = () => {
   const navigation = useNavigation();
@@ -70,12 +37,13 @@ const EditProfileScreen = () => {
     name: '',
     email: '',
     phone: '',
-    avatar: 'https://via.placeholder.com/150',
+    avatar: '',
   });
 
-  const [loading, setLoading] = useState(false); // For profile update
-  const [uploading, setUploading] = useState(false); // For image upload
+  const [loading, setLoading] = useState(false);
+  const [uploading, setUploading] = useState(false);
 
+  // ✅ Fetch user data from Firestore on mount
   useEffect(() => {
     if (!user) return;
 
@@ -84,9 +52,9 @@ const EditProfileScreen = () => {
         const userData = docSnapshot.data();
         setProfileData({
           name: userData.name || '',
-          email: userData.email || '',
+          email: userData.email || user.email || '',
           phone: userData.phone || '',
-          avatar: userData.avatar || 'https://via.placeholder.com/150',
+          avatar: userData.avatar || user.photoURL || '',
         });
       }
     });
@@ -98,6 +66,7 @@ const EditProfileScreen = () => {
     setProfileData((prev) => ({ ...prev, [field]: value }));
   };
 
+  // ✅ Pick and upload a new profile picture
   const handleChangePicture = async () => {
     const permissionResult = await ImagePicker.requestMediaLibraryPermissionsAsync();
     if (!permissionResult.granted) {
@@ -107,28 +76,31 @@ const EditProfileScreen = () => {
 
     const pickerResult = await ImagePicker.launchImageLibraryAsync({
       allowsEditing: true,
-      quality: 0.7,
+      quality: 0.4,
       aspect: [1, 1],
     });
 
     if (!pickerResult.canceled && pickerResult.assets.length > 0) {
       const image = pickerResult.assets[0];
       const imageUri = image.uri;
-      const imageName = imageUri.substring(imageUri.lastIndexOf('/') + 1);
-      const storagePath = `avatars/${user.uid}_${Date.now()}_${imageName}`;
+      const storagePath = `avatars/${user.uid}_${Date.now()}.jpg`;
 
       setUploading(true);
       try {
-        const downloadURL = await uploadImageAsync(imageUri, storagePath);
+        const downloadURL = await upload(imageUri, storagePath, (progress) => {
+          console.log(`Uploading... ${progress.toFixed(0)}%`);
+        });
+
         setProfileData((prev) => ({ ...prev, avatar: downloadURL }));
       } catch (error) {
-        Alert.alert('Upload failed', 'Could not upload image.');
+        Alert.alert('Upload failed', error.message || 'Could not upload image.');
       } finally {
         setUploading(false);
       }
     }
   };
 
+  // ✅ Save updated profile data to Firestore and Auth
   const handleUpdateProfile = async () => {
     if (!user) return;
 

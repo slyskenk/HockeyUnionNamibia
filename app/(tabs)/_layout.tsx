@@ -1,15 +1,11 @@
-// app/_layout.tsx
 import { Tabs } from 'expo-router';
-import { View, Text, StyleSheet } from 'react-native';
+import { Image, View, StyleSheet, Platform } from 'react-native';
 import { Ionicons, MaterialCommunityIcons, FontAwesome5 } from '@expo/vector-icons';
-import { useEffect } from 'react';
 import { useNavigationState } from '@react-navigation/native';
 
 export default function Layout() {
-  // Optional: to hide tab bar conditionally
   const state = useNavigationState(state => state);
   const currentRoute = state?.routes[state.index]?.name;
-
   const shouldHideTabBar = currentRoute === 'forum';
 
   return (
@@ -26,10 +22,18 @@ export default function Layout() {
         tabBarLabelStyle: {
           fontSize: 12,
         },
-        tabBarActiveTintColor: '#2563EB', // Blue when active
-        tabBarInactiveTintColor: '#64748B', // Gray when inactive
-        headerShown: false,
-        tabBarIcon: ({ color, size, focused }) => {
+        tabBarActiveTintColor: '#2563EB',
+        tabBarInactiveTintColor: '#64748B',
+        header: () => (
+          <View style={styles.headerContainer}>
+            <Image
+              source={require('../../assets/images/logo.png')}
+              resizeMode="contain"
+              style={styles.logo}
+            />
+          </View>
+        ),
+        tabBarIcon: ({ color, size }) => {
           switch (route.name) {
             case 'news':
               return <Ionicons name="home" size={size} color={color} />;
@@ -55,3 +59,19 @@ export default function Layout() {
     </Tabs>
   );
 }
+
+const styles = StyleSheet.create({
+  headerContainer: {
+    height: Platform.OS === 'android' ? 90 : 100,
+    paddingTop: Platform.OS === 'android' ? 40 : 60,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: '#fff',
+    borderBottomWidth: 1,
+    borderColor: '#eee',
+  },
+  logo: {
+    height: 50,
+    width: 1600,
+  },
+});

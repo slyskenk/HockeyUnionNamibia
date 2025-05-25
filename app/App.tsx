@@ -1,21 +1,22 @@
-import React from 'react';
+import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
-import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
-import EventsScreen from './(tabs)/events';
+import React from 'react';
 import CreateEventScreen from '../app/events/createEvents';
 import LoginScreen from './(auth)/LoginScreen';
 import SignupScreen from './(auth)/SignupScreen';
 import SplashScreen from './(auth)/SplashScreen';
-import NewsScreen from './(tabs)/news';
-import ProfileScreen from './profile/profile';
-import TeamsScreen from './(tabs)/teams'; // Fix casing if needed
-import RegisterTeamScreen from './teams/registerTeam';
-import EditTeamScreen from './teams/editTeam';
-import EditProfileScreen from './profile/editProfile';
-import SettingsScreen from './profile/settingScreen';
+import EventsScreen from './(tabs)/events';
+import HelpDesk from './(tabs)/helpDesk';
 import LiveDetail from './(tabs)/LiveDetailPage';
+import NewsScreen from './(tabs)/news';
+import TeamsScreen from './(tabs)/teams'; // Fix casing if needed
 import BookmarksScreen from './news/BookmarksScreen';
+import EditProfileScreen from './profile/editProfile';
+import ProfileScreen from './profile/profile';
+import SettingsScreen from './profile/settingScreen';
+import EditTeamScreen from './teams/editTeam';
+import RegisterTeamScreen from './teams/registerTeam';
 
 
 
@@ -34,7 +35,7 @@ function Tabs() {
       <Tab.Screen name="Teams" component={TeamsScreen} />
       <Tab.Screen name="Profile" component={ProfileScreen} />
       <Tab.Screen name="LiveDetail" component={LiveDetail} />
-
+      <Tab.Screen name="HelpDesk" component={HelpDesk} />
     </Tab.Navigator>
   );
 }

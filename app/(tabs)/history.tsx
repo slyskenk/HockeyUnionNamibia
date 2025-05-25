@@ -28,13 +28,13 @@ const HistoryScreen = () => {
     return (
         <ScrollView style={styles.container}>
             <View style={styles.header}>
-                <Text style={styles.headerTitle}>🏑 Our Legacy</Text>
+                <Text style={styles.headerTitle}>Our History and Achievements 🏆</Text>
                 <Text style={styles.headerSubtitle}>A timeline of proud moments in Namibian hockey</Text>
             </View>
 
             <View style={styles.timeline}>
                 {achievements.map((achievement, index) => (
-                    <TouchableOpacity key={index} style={styles.card} activeOpacity={0.8} onPress={() => { /* Future navigation to detail */ }}>
+                    <TouchableOpacity key={index} style={styles.card} activeOpacity={0.8} onPress={() => {}}>
                         <View style={styles.leftColumn}>
                             <View style={styles.dot} />
                             {index !== achievements.length - 1 && <View style={styles.verticalLine} />}
@@ -54,7 +54,7 @@ const HistoryScreen = () => {
 const styles = StyleSheet.create({
     container: {
         flex: 1,
-        backgroundColor: '#E6F3FA', // Light blue background
+        backgroundColor: '#E6F3FA',
     },
     header: {
         padding: 20,
@@ -72,7 +72,7 @@ const styles = StyleSheet.create({
     headerSubtitle: {
         fontSize: 16,
         color: '#555',
-        textAlign: 'center',
+        textAlign: 'left',
         marginTop: 6,
     },
     timeline: {
@@ -119,9 +119,11 @@ const styles = StyleSheet.create({
         marginBottom: 4,
     },
     event: {
-        fontSize: 15,
-        color: '#333',
+        fontSize: 17,
+        fontWeight: '600',
+        color: '#1a1a1a',
         marginBottom: 8,
+        lineHeight: 22,
     },
     image: {
         width: '100%',

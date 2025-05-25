@@ -1,22 +1,22 @@
 import { View, Text, TouchableOpacity, StyleSheet, Image } from 'react-native';
 import { useRouter } from 'expo-router';
 
-export default function Auth() {
+export default function Home() {
   const router = useRouter();
 
   return (
     <View style={styles.container}>
       <Image
-        source={require('../assets/images/logo/logo.png')} // Adjusted path
+        source={require('../assets/images/logo/logo.png')} // Corrected relative path
         style={styles.logo}
         resizeMode="contain"
       />
-      <Text style={styles.title}>Welcome to the Hockey Nation</Text>
+      <Text style={styles.title}>Welcome to the world of Namibian Hockey</Text>
       <TouchableOpacity
         style={styles.button}
-        onPress={() => router.push('/login')}
+        onPress={() => router.push('/auth')}
       >
-        <Text style={styles.buttonText}>Get Started</Text>
+        <Text style={styles.buttonText}>Start</Text>
       </TouchableOpacity>
     </View>
   );

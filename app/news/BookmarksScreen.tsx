@@ -1,92 +1,72 @@
-import React, { useState } from 'react';
+import React from 'react';
 import {
   View, Text, StyleSheet, FlatList,
   TouchableOpacity, Image, Alert
 } from 'react-native';
 import { MaterialIcons, Entypo } from '@expo/vector-icons';
 import MiniSearchBar from '../../components/ui/MiniSearchBar';
-import { useRouter } from 'expo-router';
+import { useRouter, useLocalSearchParams } from 'expo-router';
+import allNews from '../../assets/data/news.json'; // Import full JSON
 
-const dummyBookmarks = [
-  {
-    id: '1',
-    title: 'Namibia Defeats South Africa in Semis',
-    imageUrl: 'https://source.unsplash.com/800x400/?hockey,team',
-    description: 'An incredible upset in the semis where Namibia delivered an astonishing performance to defeat South Africa...',
-  },
-  {
-    id: '2',
-    title: 'Coach Reveals 2025 Game Plan',
-    imageUrl: 'https://source.unsplash.com/800x400/?coach,interview',
-    description: 'The national coach laid out an aggressive strategy for the 2025 season, focusing on youth development and faster transitions...',
-  },
-];
+type NewsItem = {
+  id: string;
+  title: string;
+  content: string;
+  imageUrl?: string;
+  videoUrl?: string;
+  mediaType: 'image' | 'video';
+  timestamp: number;
+};
 
 const BookmarksScreen = () => {
-  const [query, setQuery] = useState('');
-  const [bookmarks, setBookmarks] = useState(dummyBookmarks);
   const router = useRouter();
+  const { ids } = useLocalSearchParams();
+  const bookmarkedIds = JSON.parse(ids as string) as string[];
 
-  const filtered = bookmarks.filter(item =>
-    item.title.toLowerCase().includes(query.toLowerCase())
+  // Filter articles that match bookmarkedIds
+  const bookmarkedArticles: NewsItem[] = (allNews as NewsItem[]).filter(article =>
+    bookmarkedIds.includes(article.id)
   );
 
-  const handleDelete = (id: string) => {
-    setBookmarks(prev => prev.filter(b => b.id !== id));
+  const handleRemove = (id: string) => {
+    Alert.alert('Remove Bookmark', 'Are you sure you want to remove this article?', [
+      { text: 'Cancel', style: 'cancel' },
+      { text: 'Remove', onPress: () => Alert.alert('Functionality to remove not implemented') }
+    ]);
   };
 
-  const handleShare = (title: string) => {
-    Alert.alert('Share', `Sharing article: ${title}`);
-  };
-
-  const renderItem = ({ item }) => (
+  const renderItem = ({ item }: { item: NewsItem }) => (
     <TouchableOpacity
+      style={styles.card}
       onPress={() =>
         router.push({
           pathname: '/news/article',
           params: {
             title: item.title,
+            content: item.content,
             imageUrl: item.imageUrl,
-            description: item.description,
           },
         })
       }
-      style={styles.card}
     >
       <Image source={{ uri: item.imageUrl }} style={styles.image} />
-      <View style={styles.cardContent}>
-        <View style={{ flex: 1 }}>
-          <Text style={styles.title}>{item.title}</Text>
-          <Text numberOfLines={2} style={styles.desc}>{item.description}</Text>
-        </View>
-        <View style={styles.actions}>
-          <MaterialIcons name="bookmark" size={22} color="#004080" />
-          <TouchableOpacity
-            onPress={() =>
-              Alert.alert('Options', '', [
-                { text: 'Share', onPress: () => handleShare(item.title) },
-                { text: 'Delete', onPress: () => handleDelete(item.id), style: 'destructive' },
-                { text: 'Cancel', style: 'cancel' },
-              ])
-            }
-          >
-            <Entypo name="dots-three-vertical" size={18} color="#333" />
-          </TouchableOpacity>
-        </View>
+      <View style={styles.info}>
+        <Text style={styles.title}>{item.title}</Text>
+        <TouchableOpacity onPress={() => handleRemove(item.id)}>
+          <Entypo name="dots-three-vertical" size={18} color="#333" />
+        </TouchableOpacity>
       </View>
     </TouchableOpacity>
   );
 
   return (
     <View style={styles.container}>
-      <Text style={styles.header}>Bookmarks</Text>
-      <MiniSearchBar query={query} onChangeText={setQuery} />
+      <MiniSearchBar placeholder="Search bookmarks..." />
       <FlatList
-        data={filtered}
+        data={bookmarkedArticles}
         keyExtractor={item => item.id}
         renderItem={renderItem}
-        contentContainerStyle={{ paddingBottom: 20 }}
-        showsVerticalScrollIndicator={false}
+        contentContainerStyle={styles.list}
       />
     </View>
   );
@@ -97,44 +77,36 @@ export default BookmarksScreen;
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#e6f2ff',
+    backgroundColor: '#E6F0FA',
+    paddingTop: 10,
   },
-  header: {
-    fontSize: 22,
-    fontWeight: 'bold',
-    color: '#003366',
+  list: {
     paddingHorizontal: 16,
-    paddingTop: 16,
+    paddingBottom: 24,
   },
   card: {
     backgroundColor: '#fff',
-    margin: 16,
-    borderRadius: 10,
+    borderRadius: 12,
+    marginBottom: 16,
     overflow: 'hidden',
-    elevation: 3,
+    elevation: 2,
   },
   image: {
     width: '100%',
-    height: 160,
+    height: 180,
+    resizeMode: 'cover',
   },
-  cardContent: {
+  info: {
     flexDirection: 'row',
     justifyContent: 'space-between',
+    alignItems: 'center',
     padding: 12,
   },
   title: {
     fontSize: 16,
     fontWeight: '600',
-    color: '#222',
-  },
-  desc: {
-    fontSize: 13,
-    color: '#666',
-    marginTop: 4,
-  },
-  actions: {
-    justifyContent: 'space-between',
-    alignItems: 'flex-end',
-    marginLeft: 12,
+    flex: 1,
+    paddingRight: 8,
+    color: '#333',
   },
 });

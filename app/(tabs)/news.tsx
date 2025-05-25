@@ -129,6 +129,7 @@ const NewsScreen = () => {
           <>
             <SearchBar query={queryText} onChangeText={setQueryText} profilePic={null} />
             <Text style={styles.sectionTitle}>Top Videos</Text>
+            <View style={{ height: 40}} /> 
             <FlatList
               data={videoNews}
               keyExtractor={item => item.id}
@@ -173,7 +174,7 @@ const styles = StyleSheet.create({
     paddingBottom: 24,
   },
   sectionTitle: {
-    fontSize: 20,
+    fontSize: 24,
     fontWeight: 'bold',
     color: '#222',
     marginHorizontal: 16,

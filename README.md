@@ -1,4 +1,4 @@
-# RugbyUnion
+#HockeyUnion
 Mobile Application
 Installation:
 npm install

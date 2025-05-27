@@ -1,26 +1,52 @@
 import React from 'react';
-import { View, Text, StyleSheet, ScrollView, Image, TouchableOpacity } from 'react-native';
+import { Image, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+
 
 const achievements = [
     {
         year: 1990,
-        event: "Women's Field Hockey: 2nd at Africa Cup of Nations (Harare)",
-        image: require('../../assets/images/events/20241218-Hockey-Nkosi-Cup-Final-1-Namibia-Celebrate-Win-1024x640.jpg'),
+        event: "Post-Independence Debut on the International Stage: First appearances in regional African tournaments.",
+        image: 'https://placehold.co/600x400/007AFF/FFFFFF?text=Namibia+Team+1990s',
     },
     {
-        year: 1995,
-        event: "First African Games appearances for both Men's (5th) and Women's (4th) Field Hockey",
-        image: require('../../assets/images/events/20241218-Hockey-Nkosi-Cup-Final-1-Namibia-Celebrate-Win-1024x640.jpg'),
+        year: 1993,
+        event: "First African Cup of Nations Participation: Gaining international exposure and experience.",
+        image: 'https://placehold.co/600x400/336699/FFFFFF?text=African+Cup+93',
     },
     {
-        year: 2003,
-        event: "Men's Field Hockey: Bronze at African Games",
-        image: require('../../assets/images/events/20241218-Hockey-Nkosi-Cup-Final-1-Namibia-Celebrate-Win-1024x640.jpg'),
+        year: 2005,
+        event: "Women's Team Shines at Africa Cup of Nations: Consistently strong performances in continental championships.",
+        image: 'https://placehold.co/600x400/FFCC00/000000?text=Women+Team+2005',
+    },
+    {
+        year: 2009,
+        event: "Hosting the Indoor Hockey World Cup Qualifiers (African): Successful hosting of a major continental qualifier.",
+        image: 'https://placehold.co/600x400/FF9900/FFFFFF?text=Indoor+Qualifiers+09',
+    },
+    {
+        year: 2011,
+        event: "Men's Indoor Team Qualifies for World Cup: First-ever Indoor Hockey World Cup qualification (Men).",
+        image: 'https://placehold.co/600x400/66CC66/000000?text=Men+Indoor+WC+11',
+    },
+    {
+        year: 2015,
+        event: "Women's Indoor Team Qualifies for World Cup: First-ever Indoor Hockey World Cup qualification (Women).",
+        image: 'https://placehold.co/600x400/FF6666/FFFFFF?text=Women+Indoor+WC+15',
     },
     {
         year: 2018,
-        event: "Women's Team: Qualified for Hockey World League Semifinals",
-        image: require('../../assets/images/events/20241218-Hockey-Nkosi-Cup-Final-1-Namibia-Celebrate-Win-1024x640.jpg'),
+        event: "Double Qualification for Indoor Hockey World Cup: Simultaneous qualification for both men's and women's Indoor World Cups.",
+        image: 'https://placehold.co/600x400/9966CC/FFFFFF?text=Double+Quali+18',
+    },
+    {
+        year: 2021,
+        event: "African Indoor Hockey Cup Success: Strong performances in African Indoor Hockey Cup.",
+        image: 'https://placehold.co/600x400/00BFFF/FFFFFF?text=African+Indoor+21',
+    },
+    {
+        year: 2023,
+        event: "Another Indoor Hockey World Cup Appearance: Continued presence at the Indoor Hockey World Cup.",
+        image: 'https://placehold.co/600x400/FFD700/000000?text=Indoor+WC+23',
     },
 ];
 

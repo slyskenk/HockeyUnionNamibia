@@ -34,7 +34,7 @@ function Tabs() {
       <Tab.Screen name="Events" component={EventsScreen} />
       <Tab.Screen name="Teams" component={TeamsScreen} />
       <Tab.Screen name="Profile" component={ProfileScreen} />
-      <Tab.Screen name="LiveDetail" component={LiveDetail} />
+      <Tab.Screen name="Live" component={LiveDetail} />
       <Tab.Screen name="HelpDesk" component={HelpDesk} />
     </Tab.Navigator>
   );

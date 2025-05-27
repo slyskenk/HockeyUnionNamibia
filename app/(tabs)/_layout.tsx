@@ -1,7 +1,7 @@
-import { Tabs } from 'expo-router';
-import { Image, View, StyleSheet, Platform } from 'react-native';
-import { Ionicons, MaterialCommunityIcons, FontAwesome5 } from '@expo/vector-icons';
+import { FontAwesome5, Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import { useNavigationState } from '@react-navigation/native';
+import { Tabs } from 'expo-router';
+import { Image, Platform, StyleSheet, View } from 'react-native';
 
 export default function Layout() {
   const state = useNavigationState(state => state);
@@ -15,7 +15,7 @@ export default function Layout() {
           ? { display: 'none' }
           : {
               height: 70,
-              borderTopWidth: 1,
+              borderTopWidth: 0,
               borderColor: '#ccc',
               backgroundColor: '#fff',
             },
@@ -52,7 +52,7 @@ export default function Layout() {
       })}
     >
       <Tabs.Screen name="news" options={{ title: 'Home' }} />
-      <Tabs.Screen name="search" options={{ title: 'TeamsScreen' }} />
+      <Tabs.Screen name="search" options={{ title: 'Teams' }} />
       <Tabs.Screen name="events" options={{ title: 'Events' }} />
       <Tabs.Screen name="forum" options={{ title: 'Forum' }} />
       <Tabs.Screen name="history" options={{ title: 'History' }} />
@@ -62,16 +62,16 @@ export default function Layout() {
 
 const styles = StyleSheet.create({
   headerContainer: {
-    height: Platform.OS === 'android' ? 90 : 100,
-    paddingTop: Platform.OS === 'android' ? 40 : 60,
+    height: Platform.OS === 'android' ? 90 : 120,
+    paddingTop: Platform.OS === 'android' ? 0 : 10,
     alignItems: 'center',
     justifyContent: 'center',
     backgroundColor: '#fff',
-    borderBottomWidth: 1,
+    borderBottomWidth: 0,
     borderColor: '#eee',
   },
   logo: {
-    height: 50,
+    height: 90,
     width: 1600,
   },
 });

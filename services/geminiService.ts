@@ -1,4 +1,4 @@
-import { GoogleGenerativeAI } from '@google/generative-ai';
+import { ChatSession, GoogleGenerativeAI } from '@google/generative-ai';
 import Constants from 'expo-constants';
 
 const apiKey = Constants.expoConfig?.extra?.EXPO_PUBLIC_GEMINI_API_KEY;
@@ -7,13 +7,15 @@ if (!apiKey) {
   console.warn('⚠️ Gemini API Key is missing!');
 }
 
-const genAI = new GoogleGenerativeAI(apiKey!);
+const genAI = new GoogleGenerativeAI(apiKey);
 
-export function startNewGeminiChatSession() {
-  return genAI.getGenerativeModel({ model: 'gemini-2.0-flash' }).startChat({});
+export async function startNewGeminiChatSession(): Promise<ChatSession> {
+  const model = genAI.getGenerativeModel({ model: 'gemini-pro' });
+  const chatSession = await model.startChat({});
+  return chatSession;
 }
 
-export async function sendMessageInChat(chatSession: any, prompt: string): Promise<string> {
+export async function sendMessageInChat(chatSession: ChatSession, prompt: string): Promise<string> {
   try {
     const result = await chatSession.sendMessage(prompt);
     const response = await result.response;

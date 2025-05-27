@@ -11,7 +11,7 @@ export default function Auth() {
         style={styles.logo}
         resizeMode="contain"
       />
-      <Text style={styles.title}>Welcome to the Hockey Nation</Text>
+      <Text style={styles.title}>Welcome to the world of Namibian Hockey Union</Text>
       <TouchableOpacity
         style={styles.button}
         onPress={() => router.push('/login')}
